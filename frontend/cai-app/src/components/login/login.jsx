@@ -40,7 +40,7 @@ function Login() {
             body: JSON.stringify(userCredentials)
         };
 
-        fetch(`${process.env.REACT_APP_API_URL}/test`, request)
+        fetch(`${process.env.REACT_APP_API_URL}/login`, request)
             .then((response) => response.json())
             .then((json) => console.log(json))
             .catch((err) => console.log(err));
