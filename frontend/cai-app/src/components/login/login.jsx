@@ -4,6 +4,11 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 import { useState } from 'react';
 
@@ -12,6 +17,7 @@ import NavigationBar from '../navigationbar/navigationbar';
 function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [dialogOpen, setDialogOpen] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     function togglePasswordVisibility() {
@@ -27,28 +33,33 @@ function Login() {
     }
 
     function login() {
-        let userCredentials = {
-            "username": username,
-            "password": password
-        };
+        if (!username || !password) {
+            setDialogOpen(true);
+        } else {
+            let userCredentials = {
+                "username": username,
+                "password": password
+            };
 
-        const request = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(userCredentials)
-        };
+            const request = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userCredentials)
+            };
 
-        fetch(`${process.env.REACT_APP_API_URL}/login`, request)
-            .then((response) => response.json())
-            .then((json) => console.log(json))
-            .catch((err) => console.log(err));
+            fetch(`${process.env.REACT_APP_API_URL}/login`, request)
+                .then((response) => response.json())
+                .then((json) => console.log(json))
+                .catch((err) => console.log(err));
+        }
     }
 
     return (
         <>
             <NavigationBar />
+            <h3>Login</h3>
             <Box>
                 <Grid container>
                     <Grid size={6}>
@@ -89,6 +100,24 @@ function Login() {
                     </Grid>
                 </Grid>
             </Box>
+            <Dialog
+                open={dialogOpen}
+                onClose={() => { setDialogOpen(false) }}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                    {"Username or Password missing!"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        The username AND the password cannot be blank!
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDialogOpen(false)} autoFocus>Got it!</Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }
