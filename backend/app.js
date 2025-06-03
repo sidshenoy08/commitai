@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 require('dotenv').config();
 
@@ -19,6 +19,22 @@ const User = mongoose.model('User', {
     password: { type: String }
 });
 
+function registerUser(userCredentials) {
+    bcrypt.hash(userCredentials.password, Number(process.env.SALT_ROUNDS))
+        .then(async (hashedPassword) => {
+            await User.create({
+                username: userCredentials.username,
+                password: hashedPassword
+            })
+                .then((user) => {
+                    console.log("New user created");
+                })
+                .catch((err) => {
+                    console.log(err);
+                })
+        });
+}
+
 async function authenticateUser(userCredentials) {
     const user = await User.findOne({ username: userCredentials.username });
     if (user) {
@@ -31,8 +47,12 @@ async function authenticateUser(userCredentials) {
 app.post("/login", (request, response) => {
     authenticateUser(request.body);
     response.status(200).json({ message: 'Success' });
-})
+});
 
+app.post("/register", (request, response) => {
+    registerUser(request.body);
+    response.status(200).json({ message: 'Success' });
+});
 
 app.listen(PORT, () => {
     console.log("Server listening on port number: ", PORT);

@@ -52,8 +52,19 @@ function Register() {
                     "username": username,
                     "password": password
                 };
-    
-                console.log(userCredentials);
+
+                const request = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userCredentials)
+                };
+
+                fetch(`${process.env.REACT_APP_API_URL}/register`, request)
+                    .then((response) => response.json())
+                    .then((json) => console.log(json))
+                    .catch((err) => console.log(err));
             } else {
                 setPasswordDialogOpen(true);
             }
@@ -113,7 +124,7 @@ function Register() {
                             }
                             }
                             onChange={handlePasswordChange} />
-                        <TextField id="outlined-basic-password"
+                        <TextField id="outlined-basic-confirm-password"
                             required={true}
                             color="secondary"
                             label="Confirm Password"
