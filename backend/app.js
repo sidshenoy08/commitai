@@ -38,9 +38,15 @@ function registerUser(userCredentials) {
 async function authenticateUser(userCredentials) {
     const user = await User.findOne({ username: userCredentials.username });
     if (user) {
-        console.log(user);
+        bcrypt.compare(userCredentials.password, user.password, function (err, result) {
+            if (result) {
+                console.log("Password matches!");
+            } else {
+                console.log("Passwords do not match!");
+            }
+        });
     } else {
-        console.log("No such user");
+        console.log("No such user exists!");
     }
 }
 
