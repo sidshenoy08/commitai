@@ -50,8 +50,15 @@ function Login() {
             };
 
             fetch(`${process.env.REACT_APP_API_URL}/login`, request)
-                .then((response) => response.json())
-                .then((json) => console.log(json))
+                .then((response) => {
+                    if(response.status === 401) {
+                        throw new Error("Invalid user credentials!");
+                    } else {
+                        return response.json();
+                    }       
+                }
+                )
+                .then((json) => localStorage.setItem('jwtToken', json.token))
                 .catch((err) => console.log(err));
         }
     }

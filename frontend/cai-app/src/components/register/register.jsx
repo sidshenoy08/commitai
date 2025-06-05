@@ -62,8 +62,14 @@ function Register() {
                 };
 
                 fetch(`${process.env.REACT_APP_API_URL}/register`, request)
-                    .then((response) => response.json())
-                    .then((json) => console.log(json))
+                    .then((response) => {
+                        if(response.status === 500) {
+                            throw new Error("New user could not be created!");
+                        } else {
+                            return response.json();
+                        }
+                    })
+                    .then((json) => localStorage.setItem('jwtToken', json.token))
                     .catch((err) => console.log(err));
             } else {
                 setPasswordDialogOpen(true);

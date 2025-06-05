@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 require('dotenv').config();
 
@@ -11,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT;
+const options = { expiresIn: 10 };
 
 mongoose.connect(process.env.DB_URL);
 
@@ -19,45 +21,60 @@ const User = mongoose.model('User', {
     password: { type: String }
 });
 
-function registerUser(userCredentials) {
-    bcrypt.hash(userCredentials.password, Number(process.env.SALT_ROUNDS))
-        .then(async (hashedPassword) => {
-            await User.create({
-                username: userCredentials.username,
-                password: hashedPassword
-            })
-                .then((user) => {
-                    console.log("New user created");
-                })
-                .catch((err) => {
-                    console.log(err);
-                })
+function generateJWT(payload) {
+    return jwt.sign(payload, process.env.JWT_SECRET, options);
+}
+
+async function registerUser(userCredentials) {
+    try {
+        const hashedPassword = await bcrypt.hash(userCredentials.password, Number(process.env.SALT_ROUNDS));
+        const user = await User.create({
+            username: userCredentials.username,
+            password: hashedPassword
         });
+        if (user) {
+            const token = generateJWT({ username: userCredentials.username });
+            return token;
+        } else {
+            return null;
+        }
+    } catch (err) {
+        console.log(err);
+        return null;
+    }
 }
 
 async function authenticateUser(userCredentials) {
     const user = await User.findOne({ username: userCredentials.username });
     if (user) {
-        bcrypt.compare(userCredentials.password, user.password, function (err, result) {
-            if (result) {
-                console.log("Password matches!");
-            } else {
-                console.log("Passwords do not match!");
-            }
-        });
+        const result = await bcrypt.compare(userCredentials.password, user.password);
+        if (result) {
+            const token = generateJWT({ username: userCredentials.username });
+            return token;
+        } else {
+            return null;
+        }
     } else {
-        console.log("No such user exists!");
+        return null;
     }
 }
 
-app.post("/login", (request, response) => {
-    authenticateUser(request.body);
-    response.status(200).json({ message: 'Success' });
+app.post("/login", async (request, response) => {
+    const token = await authenticateUser(request.body);
+    if (token) {
+        response.status(200).json({ token: token });
+    } else {
+        response.status(401).json({ message: 'Invalid user credentials' });
+    }
 });
 
-app.post("/register", (request, response) => {
-    registerUser(request.body);
-    response.status(200).json({ message: 'Success' });
+app.post("/register", async (request, response) => {
+    const token = await registerUser(request.body);
+    if (token) {
+        response.status(201).json({ token: token });
+    } else {
+        response.status(500).json({ message: 'New user could not be created' });
+    }
 });
 
 app.listen(PORT, () => {
