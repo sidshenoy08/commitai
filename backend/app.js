@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT;
-const options = { expiresIn: 10 };
+const options = { expiresIn: 60 };
 
 mongoose.connect(process.env.DB_URL);
 
@@ -74,6 +74,21 @@ app.post("/register", async (request, response) => {
         response.status(201).json({ token: token });
     } else {
         response.status(500).json({ message: 'New user could not be created' });
+    }
+});
+
+app.post("/upload", (request, response) => {
+    const authTokenArray = request.header('authorization').split(" ");
+    if (authTokenArray[0] !== 'Bearer') {
+        response.status(401).json({ message: 'User token is not valid' });
+    } else {
+        try {
+            const decodedToken = jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options);
+            console.log(decodedToken);
+        } catch(error) {
+            console.log(error);
+            response.status(401).json({message: 'User token has expired or is not valid!'});
+        }
     }
 });
 
