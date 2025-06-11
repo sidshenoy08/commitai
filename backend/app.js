@@ -3,6 +3,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
 
 require('dotenv').config();
 
@@ -12,7 +13,9 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT;
-const options = { expiresIn: 60 };
+const options = { expiresIn: process.env.JWT_DURATION };
+
+const upload = multer({dest: 'uploads/'});
 
 mongoose.connect(process.env.DB_URL);
 
@@ -77,17 +80,16 @@ app.post("/register", async (request, response) => {
     }
 });
 
-app.post("/upload", (request, response) => {
+app.post("/upload", upload.array('images'), (request, response) => {
     const authTokenArray = request.header('authorization').split(" ");
     if (authTokenArray[0] !== 'Bearer') {
         response.status(401).json({ message: 'User token is not valid' });
     } else {
         try {
-            const decodedToken = jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options);
-            console.log(decodedToken);
-        } catch(error) {
+            response.status(200).json({ message: 'Images uploaded' });
+        } catch (error) {
             console.log(error);
-            response.status(401).json({message: 'User token has expired or is not valid!'});
+            response.status(401).json({ message: 'User token has expired or is not valid!' });
         }
     }
 });

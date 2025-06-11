@@ -1,9 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 import { Button } from "@mui/material";
+import { FileUpload } from 'primereact/fileupload';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { FloatLabel } from 'primereact/floatlabel';
+import { PrimeReactProvider } from 'primereact/api';
 
 function Home() {
+    const [caption, setCaption] = useState("");
+    const [images, setImages] = useState([]);
+
     const navigate = useNavigate();
     const logout = () => {
         navigate('/');
@@ -22,18 +29,29 @@ function Home() {
                     logout();
                 }
             }
-        }, 30000);
-
+        }, parseInt(process.env.REACT_APP_JWT_INTERVAL));
         return () => clearInterval(interval);
     });
 
-    function uploadImage() {
+    function uploadImages(event) {
+        setImages(Array.from(event.files));
+    }
+
+    function upload() {
+        const formData = new FormData();
+
+        images.forEach((image) => {
+            formData.append('images', image);
+        });
+
+        formData.append('caption', caption);
+
         const request = {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
-                'Content-Type': 'application/json'
-            }
+                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+            },
+            body: formData
         };
 
         fetch(`${process.env.REACT_APP_API_URL}/upload`, request)
@@ -44,7 +62,14 @@ function Home() {
 
     return (<>
         <h3>Home</h3>
-        <Button variant="contained" color="secondary" onClick={uploadImage}>Upload</Button>
+        <PrimeReactProvider>
+            <FileUpload mode="basic" name="imageupload" customUpload multiple accept="image/*" maxFileSize={1000000} onSelect={uploadImages} />
+            <FloatLabel>
+                <InputTextarea id="caption" value={caption} onChange={(e) => setCaption(e.target.value)} rows={5} cols={30} />
+                <label htmlFor="caption">Caption</label>
+            </FloatLabel>
+        </PrimeReactProvider>
+        <Button variant="contained" color="secondary" onClick={upload}>Upload</Button>
     </>);
 }
 

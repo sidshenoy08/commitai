@@ -4,6 +4,15 @@ import App from './app.js';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+// 1. PrimeReact core styles
+import 'primereact/resources/primereact.min.css';
+
+// 2. Theme of your choice (e.g., Lara Light Indigo)
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
+
+// 3. PrimeIcons (required for icons in buttons, etc.)
+import 'primeicons/primeicons.css';
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
