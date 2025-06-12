@@ -135,7 +135,7 @@ app.post("/upload", upload.array('images'), async (request, response) => {
     }
 });
 
-app.post("/fetch-posts", (request, response) => {
+app.post("/fetch-posts", async (request, response) => {
     const authTokenArray = request.header('authorization').split(" ");
     if (authTokenArray[0] !== 'Bearer') {
         response.status(401).json({ message: 'User token is not valid' });
@@ -145,8 +145,12 @@ app.post("/fetch-posts", (request, response) => {
                 if (error) {
                     throw error;
                 } else {
-                    console.log(decodedToken);
-                    response.status(200).json({ message: 'Posts fetched successfully' });
+                    const posts = await Post.find({uploadedBy: decodedToken.username});
+                    if (posts) {
+                        response.status(200).json({posts: posts, message: 'Posts fetched successfully'});
+                    } else {
+                        response.status(200).json({posts: [], message: 'Posts fetched successfully'});
+                    }
                 }
             });
 
