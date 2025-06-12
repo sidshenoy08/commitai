@@ -9,7 +9,8 @@ import { PrimeReactProvider } from 'primereact/api';
 
 function Home() {
     const [caption, setCaption] = useState("");
-    const [images, setImages] = useState([]);
+    const [posts, setPosts] = useState([]);
+    const [selectedImages, setSelectedImages] = useState([]);
 
     const navigate = useNavigate();
     const logout = () => {
@@ -18,6 +19,7 @@ function Home() {
 
     useEffect(() => {
         const interval = setInterval(() => {
+            console.log('heck');
             const token = localStorage.getItem('jwtToken');
             if (!token) {
                 logout();
@@ -33,15 +35,29 @@ function Home() {
         return () => clearInterval(interval);
     });
 
-    function uploadImages(event) {
-        setImages(Array.from(event.files));
+    useEffect(() => {
+        const request = {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+            }
+        };
+
+        fetch(`${process.env.REACT_APP_API_URL}/fetch-posts`, request)
+            .then((response) => response.json())
+            .then((json) => console.log(json))
+            .catch((err) => console.log(err));
+    }, [posts]);
+
+    function selectImages(event) {
+        setSelectedImages(Array.from(event.files));
     }
 
     function upload() {
         const formData = new FormData();
 
-        images.forEach((image) => {
-            formData.append('images', image);
+        selectedImages.forEach((selectedImage) => {
+            formData.append('images', selectedImage);
         });
 
         formData.append('caption', caption);
@@ -63,7 +79,7 @@ function Home() {
     return (<>
         <h3>Home</h3>
         <PrimeReactProvider>
-            <FileUpload mode="basic" name="imageupload" customUpload multiple accept="image/*" maxFileSize={1000000} onSelect={uploadImages} />
+            <FileUpload mode="basic" name="imageupload" customUpload multiple accept="image/*" maxFileSize={1000000} onSelect={selectImages} />
             <FloatLabel>
                 <InputTextarea id="caption" value={caption} onChange={(e) => setCaption(e.target.value)} rows={5} cols={30} />
                 <label htmlFor="caption">Caption</label>
