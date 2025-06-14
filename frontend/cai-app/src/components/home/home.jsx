@@ -6,6 +6,10 @@ import { FileUpload } from 'primereact/fileupload';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { FloatLabel } from 'primereact/floatlabel';
 import { PrimeReactProvider } from 'primereact/api';
+import ImageList from '@mui/material/ImageList';
+import ImageListItem from '@mui/material/ImageListItem';
+import ImageListItemBar from '@mui/material/ImageListItemBar';
+import Carousel from 'react-bootstrap/Carousel';
 
 function Home() {
     const [caption, setCaption] = useState("");
@@ -19,7 +23,6 @@ function Home() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            console.log('heck');
             const token = localStorage.getItem('jwtToken');
             if (!token) {
                 logout();
@@ -45,9 +48,9 @@ function Home() {
 
         fetch(`${process.env.REACT_APP_API_URL}/fetch-posts`, request)
             .then((response) => response.json())
-            .then((json) => console.log(json))
+            .then((json) => setPosts(json.posts))
             .catch((err) => console.log(err));
-    }, [posts]);
+    }, []);
 
     function selectImages(event) {
         setSelectedImages(Array.from(event.files));
@@ -86,6 +89,46 @@ function Home() {
             </FloatLabel>
         </PrimeReactProvider>
         <Button variant="contained" color="secondary" onClick={upload}>Upload</Button>
+        {posts.length > 0 ?
+            <div>
+                <h1>Your Posts</h1>
+                <ImageList sx={{ width: '80%', height: '50%' }} cols={3} rowHeight={164}>
+                    {posts.map((post, index) => (
+                        post.paths.length > 1 ?
+                            <Carousel variant="dark">
+                                {post.paths.map((path, index) => (
+                                    <Carousel.Item>
+                                        <ImageListItem key={index}>
+                                            <img
+                                                srcSet={`${process.env.REACT_APP_API_URL}/${path}`}
+                                                src={`${process.env.REACT_APP_API_URL}/${path}`}
+                                                alt={post.caption}
+                                                loading="lazy"
+                                            />
+                                            <ImageListItemBar
+                                                title={post.caption}
+                                                subtitle={post.uploadedOn}
+                                            />
+                                        </ImageListItem>
+                                    </Carousel.Item>
+                                ))}
+                            </Carousel>
+                            : <ImageListItem key={index}>
+                                <img
+                                    srcSet={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
+                                    src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
+                                    alt={posts.caption}
+                                    loading="lazy"
+                                />
+                                <ImageListItemBar
+                                    title={post.caption}
+                                    subtitle={post.uploadedOn}
+                                />
+                            </ImageListItem>
+                    ))}
+                </ImageList>
+            </div>
+            : <h1>No Posts Yet!</h1>}
     </>);
 }
 
