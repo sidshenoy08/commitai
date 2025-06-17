@@ -6,7 +6,7 @@ import BrandLogo from '../../assets/brandlogo.png';
 function NavigationBar() {
     return (
         <>
-            <Navbar className="bg-body-tertiary">
+            <Navbar style={{backgroundColor: "#F6F8FF"}}>
                 <Container>
                     <Navbar.Brand href="/" className="mr-auto">
                         <img

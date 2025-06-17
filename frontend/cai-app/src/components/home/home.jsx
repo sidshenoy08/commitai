@@ -143,7 +143,7 @@ function Home() {
                                             />
                                             <ImageListItemBar
                                                 title={post.caption}
-                                                subtitle={post.uploadedOn}
+                                                subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
                                                 actionIcon={
                                                     <IconButton
                                                         sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
@@ -166,7 +166,7 @@ function Home() {
                                 />
                                 <ImageListItemBar
                                     title={post.caption}
-                                    subtitle={post.uploadedOn}
+                                    subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
                                     actionIcon={
                                         <IconButton
                                             sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
