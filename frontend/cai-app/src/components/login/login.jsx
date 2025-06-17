@@ -67,7 +67,6 @@ function Login() {
                 )
                 .then((json) => {
                     localStorage.setItem('jwtToken', json.token);
-                    console.log(localStorage.getItem('jwtToken'));
                 })
                 .then(() => redirectToHome())
                 .catch((err) => console.log(err));

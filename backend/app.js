@@ -146,15 +146,39 @@ app.post("/fetch-posts", async (request, response) => {
                 if (error) {
                     throw error;
                 } else {
-                    const posts = await Post.find({uploadedBy: decodedToken.username});
+                    const posts = await Post.find({ uploadedBy: decodedToken.username });
                     if (posts) {
-                        response.status(200).json({posts: posts, message: 'Posts fetched successfully'});
+                        response.status(200).json({ posts: posts, message: 'Posts fetched successfully' });
                     } else {
-                        response.status(200).json({posts: [], message: 'Posts fetched successfully'});
+                        response.status(200).json({ posts: [], message: 'Posts fetched successfully' });
                     }
                 }
             });
+        } catch (error) {
+            console.log(error);
+            response.status(401).json({ message: 'User token has expired or is not valid!' });
+        }
+    }
+});
 
+app.post("/delete-post", async (request, response) => {
+    const authTokenArray = request.header('authorization').split(" ");
+    if (authTokenArray[0] !== 'Bearer') {
+        response.status(401).json({ message: 'User token is not valid' });
+    } else {
+        try {
+            jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
+                if (error) {
+                    throw error;
+                } else {
+                    const result = await Post.deleteOne({ _id: request.body.postId, uploadedBy: request.body.username });
+                    if (result.deletedCount === 1) {
+                        response.status(200).json({ message: 'Post deleted successfully' });
+                    } else {
+                        response.status(500).json({ message: 'Post could not be deleted!' });
+                    }
+                }
+            });
         } catch (error) {
             console.log(error);
             response.status(401).json({ message: 'User token has expired or is not valid!' });

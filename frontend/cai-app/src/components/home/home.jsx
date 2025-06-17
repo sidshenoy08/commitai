@@ -10,6 +10,8 @@ import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
 import Carousel from 'react-bootstrap/Carousel';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 function Home() {
     const [caption, setCaption] = useState("");
@@ -75,7 +77,42 @@ function Home() {
 
         fetch(`${process.env.REACT_APP_API_URL}/upload`, request)
             .then((response) => response.json())
-            .then((json) => console.log(json))
+            .then(() => refreshFeed())
+            .catch((err) => console.log(err));
+    }
+
+    function refreshFeed() {
+        const request = {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+            }
+        };
+
+        fetch(`${process.env.REACT_APP_API_URL}/fetch-posts`, request)
+            .then((response) => response.json())
+            .then((json) => setPosts(json.posts))
+            .catch((err) => console.log(err));
+    }
+
+    function deletePost(postId, username) {
+        let queryParameters = {
+            "postId": postId,
+            "username": username
+        };
+
+        const request = {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(queryParameters)
+        };
+
+        fetch(`${process.env.REACT_APP_API_URL}/delete-post`, request)
+            .then((response) => response.json())
+            .then(() => refreshFeed())
             .catch((err) => console.log(err));
     }
 
@@ -92,15 +129,14 @@ function Home() {
         {posts.length > 0 ?
             <div>
                 <h1>Your Posts</h1>
-                <ImageList sx={{ width: '80%', height: '50%' }} cols={3} rowHeight={164}>
+                <ImageList sx={{ width: '80%', height: '50%' }} cols={3}>
                     {posts.map((post, index) => (
                         post.paths.length > 1 ?
-                            <Carousel variant="dark">
+                            <Carousel key={index} variant="dark" controls={false}>
                                 {post.paths.map((path, index) => (
-                                    <Carousel.Item>
+                                    <Carousel.Item key={post._id + "-" + index}>
                                         <ImageListItem key={index}>
                                             <img
-                                                srcSet={`${process.env.REACT_APP_API_URL}/${path}`}
                                                 src={`${process.env.REACT_APP_API_URL}/${path}`}
                                                 alt={post.caption}
                                                 loading="lazy"
@@ -108,14 +144,22 @@ function Home() {
                                             <ImageListItemBar
                                                 title={post.caption}
                                                 subtitle={post.uploadedOn}
+                                                actionIcon={
+                                                    <IconButton
+                                                        sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
+                                                        aria-label={`Delete Post`}
+                                                        onClick={() => deletePost(post._id, post.uploadedBy)}
+                                                    >
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                }
                                             />
                                         </ImageListItem>
                                     </Carousel.Item>
                                 ))}
                             </Carousel>
-                            : <ImageListItem key={index}>
+                            : <ImageListItem key={post._id}>
                                 <img
-                                    srcSet={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
                                     src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
                                     alt={posts.caption}
                                     loading="lazy"
@@ -123,6 +167,15 @@ function Home() {
                                 <ImageListItemBar
                                     title={post.caption}
                                     subtitle={post.uploadedOn}
+                                    actionIcon={
+                                        <IconButton
+                                            sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
+                                            aria-label={`Delete Post`}
+                                            onClick={() => deletePost(post._id, post.uploadedBy)}
+                                        >
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    }
                                 />
                             </ImageListItem>
                     ))}
