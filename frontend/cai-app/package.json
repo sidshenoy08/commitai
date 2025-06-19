@@ -8,6 +8,7 @@
     "@fontsource/roboto": "^5.2.5",
     "@lottiefiles/dotlottie-react": "^0.13.5",
     "@mui/icons-material": "^6.4.11",
+    "@mui/joy": "^5.0.0-beta.52",
     "@mui/material": "^6.4.11",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
