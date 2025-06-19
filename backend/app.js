@@ -5,6 +5,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
 
 require('dotenv').config();
 
@@ -13,6 +15,14 @@ const app = express();
 app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json());
+
+const server = createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: process.env.CLIENT_URL,
+        methods: ['GET', 'POST']
+    }
+});
 
 const PORT = process.env.PORT;
 const options = { expiresIn: process.env.JWT_DURATION };
@@ -186,6 +196,14 @@ app.post("/delete-post", async (request, response) => {
     }
 });
 
-app.listen(PORT, () => {
+io.on('connection', (socket) => {
+    console.log("A user logged in!");
+
+    socket.on('disconnect', () => {
+        console.log("A user disconnected!");
+    })
+});
+
+server.listen(PORT, () => {
     console.log("Server listening on port number: ", PORT);
 });
