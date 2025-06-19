@@ -196,6 +196,35 @@ app.post("/delete-post", async (request, response) => {
     }
 });
 
+app.post("/fetch-users", async (request, response) => {
+    const authTokenArray = request.header('authorization').split(" ");
+    if (authTokenArray[0] !== 'Bearer') {
+        response.status(401).json({ message: 'User token is not valid' });
+    } else {
+        try {
+            jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
+                if (error) {
+                    throw error;
+                } else {
+                    let usernames = [];
+                    const users = await User.find({ username: { $ne: decodedToken.username } }, '-password -__v -_id');
+                    if (users) {
+                        users.map((user) => {
+                            usernames.push(user.username);
+                        });
+                        response.status(200).json({ users: usernames, message: 'Usernames fetched successfully' });
+                    } else {
+                        response.status(200).json({ users: usernames, message: 'Usernames fetched successfully' });
+                    }
+                }
+            });
+        } catch (error) {
+            console.log(error);
+            response.status(401).json({ message: 'User token has expired or is not valid!' });
+        }
+    }
+});
+
 io.on('connection', (socket) => {
     console.log("A user logged in!");
 
