@@ -11,6 +11,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import NavigationBar from '../navigationbar/navigationbar';
 
@@ -22,6 +23,12 @@ function Register() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [credentialsDialogOpen, setCredentialsDialogOpen] = useState(false);
     const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+
+    const navigate = useNavigate();
+
+    const redirectToHome = () => {
+        navigate('/home');
+    }
 
     function togglePasswordVisibility() {
         setShowPassword(!showPassword);
@@ -70,6 +77,7 @@ function Register() {
                         }
                     })
                     .then((json) => localStorage.setItem('jwtToken', json.token))
+                    .then(() => redirectToHome())
                     .catch((err) => console.log(err));
             } else {
                 setPasswordDialogOpen(true);

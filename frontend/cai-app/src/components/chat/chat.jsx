@@ -12,20 +12,12 @@ import DialogTitle from '@mui/material/DialogTitle';
 import AddIcon from '@mui/icons-material/Add';
 import CancelIcon from '@mui/icons-material/Cancel';
 import Autocomplete from '@mui/joy/Autocomplete';
+import PeopleIcon from '@mui/icons-material/People';
 
 function Chat() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [socket, setSocket] = useState(null);
     const [users, setUsers] = useState([]);
-
-    const top100Films = [
-        { label: 'The Shawshank Redemption', year: 1994 },
-        { label: 'The Godfather', year: 1972 },
-        { label: 'The Godfather: Part II', year: 1974 },
-        { label: 'The Dark Knight', year: 2008 },
-        { label: '12 Angry Men', year: 1957 },
-        { label: "Schindler's List", year: 1993 }
-    ];
 
     const navigate = useNavigate();
     const logout = () => {
@@ -94,9 +86,19 @@ function Chat() {
                         variant="standard"
                     />
                     <Autocomplete
+                        multiple={true}
                         placeholder="Add Members"
                         options={users}
                         sx={{ width: 300 }}
+                        slotProps={{
+                            listbox: {
+                                sx: (theme) => ({
+                                    zIndex: theme.vars.zIndex.modal
+                                })
+                            }
+                        }}
+                        noOptionsText="No users found!"
+                        startDecorator={<PeopleIcon />}
                     />
                 </DialogContent>
                 <DialogActions>
