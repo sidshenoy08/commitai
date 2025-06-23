@@ -12,15 +12,25 @@ import DialogTitle from '@mui/material/DialogTitle';
 import AddIcon from '@mui/icons-material/Add';
 import CancelIcon from '@mui/icons-material/Cancel';
 import Autocomplete from '@mui/joy/Autocomplete';
-import PeopleIcon from '@mui/icons-material/People';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import Drawer from "@mui/material/Drawer";
+import Toolbar from "@mui/material/Toolbar";
+import Box from "@mui/material/Box";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ListItemText from "@mui/material/ListItemText";
+import PeopleAltTwoToneIcon from '@mui/icons-material/PeopleAltTwoTone';
 
 function Chat() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [errorDialogOpen, setErrorDialogOpen] = useState(false);
     const [socket, setSocket] = useState(null);
-    const [users, setUsers] = useState([]);
-    const [groupName, setGroupName] = useState('');
+    const [allUsers, setAllUsers] = useState([]);
+    const [newGroupName, setNewGroupName] = useState('');
     const [selectedMembers, setSelectedMembers] = useState([]);
+    const [allGroups, setAllGroups] = useState([]);
 
     const navigate = useNavigate();
     const logout = () => {
@@ -48,6 +58,8 @@ function Chat() {
         const newSocket = io(process.env.REACT_APP_API_URL);
         setSocket(newSocket);
 
+        fetchGroups();
+
         return () => {
             newSocket.disconnect();
         };
@@ -63,13 +75,13 @@ function Chat() {
 
         fetch(`${process.env.REACT_APP_API_URL}/fetch-users`, request)
             .then((response) => response.json())
-            .then((json) => setUsers(json.users))
+            .then((json) => setAllUsers(json.users))
             .then(() => setDialogOpen(true))
             .catch((err) => console.log(err));
     }
 
-    function handleGroupNameChange(event) {
-        setGroupName(event.target.value);
+    function handleNewGroupNameChange(event) {
+        setNewGroupName(event.target.value);
     }
 
     function handleMemberSelection(event, newValue) {
@@ -77,11 +89,11 @@ function Chat() {
     }
 
     function createGroup() {
-        if (!groupName || !selectedMembers) {
+        if (!newGroupName || !selectedMembers) {
             setErrorDialogOpen(true);
         } else {
             let group = {
-                name: groupName,
+                name: newGroupName,
                 members: selectedMembers
             };
 
@@ -96,10 +108,11 @@ function Chat() {
 
             fetch(`${process.env.REACT_APP_API_URL}/create-group`, request)
                 .then((response) => {
-                    if(response.status === 200) {
+                    if (response.status === 200) {
                         response.json();
+                        setAllGroups([...allGroups, newGroupName]);
                     } else {
-                        throw new Error("SOmething went wrong!");
+                        throw new Error("Something went wrong!");
                     }
                 })
                 .then((json) => cancelCreate())
@@ -108,14 +121,52 @@ function Chat() {
     }
 
     function cancelCreate() {
-        setGroupName('');
+        setNewGroupName('');
         setSelectedMembers([]);
         setDialogOpen(false);
     }
 
+    function fetchGroups() {
+        const request = {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+            }
+        };
+
+        fetch(`${process.env.REACT_APP_API_URL}/fetch-groups`, request)
+            .then((response) => response.json())
+            .then((json) => setAllGroups(json.groups))
+            .catch((err) => console.log(err));
+    }
+
     return (
         <>
-            <Button variant="contained" color="secondary" onClick={() => openDialog()}>Create Group</Button>
+            <Drawer
+                variant="permanent"
+                sx={{
+                    width: 240,
+                    flexShrink: 0,
+                    [`& .MuiDrawer-paper`]: { width: 240, boxSizing: 'border-box' },
+                }}
+            >
+                <Toolbar />
+                <Button variant="contained" color="secondary" onClick={() => openDialog()}>Create Group</Button>
+                <Box sx={{ overflow: 'auto' }}>
+                    <List>
+                        {allGroups.map((groupName, index) => (
+                            <ListItem key={index} disablePadding>
+                                <ListItemButton>
+                                    <ListItemIcon>
+                                        <PeopleAltTwoToneIcon />
+                                    </ListItemIcon>
+                                    <ListItemText primary={groupName} />
+                                </ListItemButton>
+                            </ListItem>
+                        ))}
+                    </List>
+                </Box>
+            </Drawer>
             <Dialog
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
@@ -127,18 +178,18 @@ function Chat() {
                     </DialogContentText>
                     <TextField
                         required
-                        id="groupName"
-                        name="groupName"
+                        id="newGroupName"
+                        name="newGroupName"
                         label="Group Name"
                         fullWidth
                         variant="standard"
-                        onChange={handleGroupNameChange}
+                        onChange={handleNewGroupNameChange}
                     />
                     <Autocomplete
                         multiple={true}
                         required
                         placeholder="Add Members"
-                        options={users}
+                        options={allUsers}
                         onChange={handleMemberSelection}
                         sx={{ width: 300 }}
                         slotProps={{
@@ -149,7 +200,7 @@ function Chat() {
                             }
                         }}
                         noOptionsText="No users found!"
-                        startDecorator={<PeopleIcon />}
+                        startDecorator={<GroupAddIcon />}
                     />
                 </DialogContent>
                 <DialogActions>
