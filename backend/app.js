@@ -52,6 +52,12 @@ const Post = mongoose.model('Post', {
     uploadedOn: { type: Date }
 });
 
+const Group = mongoose.model('Group', {
+    name: { type: String },
+    members: { type: [String] },
+    messages: { type: [String] }
+});
+
 function generateJWT(payload) {
     return jwt.sign(payload, process.env.JWT_SECRET, options);
 }
@@ -215,6 +221,34 @@ app.post("/fetch-users", async (request, response) => {
                         response.status(200).json({ users: usernames, message: 'Usernames fetched successfully' });
                     } else {
                         response.status(200).json({ users: usernames, message: 'Usernames fetched successfully' });
+                    }
+                }
+            });
+        } catch (error) {
+            console.log(error);
+            response.status(401).json({ message: 'User token has expired or is not valid!' });
+        }
+    }
+});
+
+app.post("/create-group", async (request, response) => {
+    const authTokenArray = request.header('authorization').split(" ");
+    if (authTokenArray[0] !== 'Bearer') {
+        response.status(401).json({ message: 'User token is not valid' });
+    } else {
+        try {
+            jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
+                if (error) {
+                    throw error;
+                } else {
+                    const group = await Group.create({
+                        name: request.body.name,
+                        members: request.body.members
+                    });
+                    if (group) {
+                        response.status(200).json({ message: 'Group created' });
+                    } else {
+                        response.status(500).json({ message: 'Your group could not be created!' });
                     }
                 }
             });

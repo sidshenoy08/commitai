@@ -16,8 +16,11 @@ import PeopleIcon from '@mui/icons-material/People';
 
 function Chat() {
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [errorDialogOpen, setErrorDialogOpen] = useState(false);
     const [socket, setSocket] = useState(null);
     const [users, setUsers] = useState([]);
+    const [groupName, setGroupName] = useState('');
+    const [selectedMembers, setSelectedMembers] = useState([]);
 
     const navigate = useNavigate();
     const logout = () => {
@@ -65,6 +68,51 @@ function Chat() {
             .catch((err) => console.log(err));
     }
 
+    function handleGroupNameChange(event) {
+        setGroupName(event.target.value);
+    }
+
+    function handleMemberSelection(event, newValue) {
+        setSelectedMembers(newValue);
+    }
+
+    function createGroup() {
+        if (!groupName || !selectedMembers) {
+            setErrorDialogOpen(true);
+        } else {
+            let group = {
+                name: groupName,
+                members: selectedMembers
+            };
+
+            const request = {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(group)
+            };
+
+            fetch(`${process.env.REACT_APP_API_URL}/create-group`, request)
+                .then((response) => {
+                    if(response.status === 200) {
+                        response.json();
+                    } else {
+                        throw new Error("SOmething went wrong!");
+                    }
+                })
+                .then((json) => cancelCreate())
+                .catch((err) => console.log(err));
+        }
+    }
+
+    function cancelCreate() {
+        setGroupName('');
+        setSelectedMembers([]);
+        setDialogOpen(false);
+    }
+
     return (
         <>
             <Button variant="contained" color="secondary" onClick={() => openDialog()}>Create Group</Button>
@@ -84,11 +132,14 @@ function Chat() {
                         label="Group Name"
                         fullWidth
                         variant="standard"
+                        onChange={handleGroupNameChange}
                     />
                     <Autocomplete
                         multiple={true}
+                        required
                         placeholder="Add Members"
                         options={users}
+                        onChange={handleMemberSelection}
                         sx={{ width: 300 }}
                         slotProps={{
                             listbox: {
@@ -102,8 +153,26 @@ function Chat() {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button variant="contained" color="error" startIcon={< CancelIcon />} onClick={() => setDialogOpen(false)}>Cancel</Button>
-                    <Button variant="contained" color="success" endIcon={<AddIcon />}>Create</Button>
+                    <Button variant="contained" color="error" startIcon={< CancelIcon />} onClick={() => cancelCreate()}>Cancel</Button>
+                    <Button variant="contained" color="success" endIcon={<AddIcon />} onClick={() => createGroup()}>Create</Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                open={errorDialogOpen}
+                onClose={() => { setErrorDialogOpen(false) }}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title">
+                    {"Group could not be created!"}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        Group name cannot be blank and you MUST add at least one member!
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setErrorDialogOpen(false)} autoFocus>Got it!</Button>
                 </DialogActions>
             </Dialog>
         </>
