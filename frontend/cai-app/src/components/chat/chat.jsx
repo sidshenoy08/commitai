@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 import { io } from 'socket.io-client';
@@ -26,11 +26,16 @@ import PeopleAltTwoToneIcon from '@mui/icons-material/PeopleAltTwoTone';
 function Chat() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [errorDialogOpen, setErrorDialogOpen] = useState(false);
-    const [socket, setSocket] = useState(null);
+    // const [socket, setSocket] = useState(null);
     const [allUsers, setAllUsers] = useState([]);
     const [newGroupName, setNewGroupName] = useState('');
+    const [currentGroup, setCurrentGroup] = useState('');
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [allGroups, setAllGroups] = useState([]);
+    // const [retrievedMessages, setRetrievedMessages] = useState([]);
+    // const [sentMessages, setSentMessages] = useState([]);
+
+    let socket = useRef(null);
 
     const navigate = useNavigate();
     const logout = () => {
@@ -55,14 +60,14 @@ function Chat() {
     });
 
     useEffect(() => {
-        const newSocket = io(process.env.REACT_APP_API_URL);
-        setSocket(newSocket);
+        // const newSocket = io(process.env.REACT_APP_API_URL);
+        // setSocket(newSocket);
 
         fetchGroups();
 
-        return () => {
-            newSocket.disconnect();
-        };
+        // return () => {
+        //     newSocket.disconnect();
+        // };
     }, []);
 
     function openDialog() {
@@ -140,6 +145,34 @@ function Chat() {
             .catch((err) => console.log(err));
     }
 
+    function initializeChat(groupName) {
+        setCurrentGroup(groupName);
+
+        if (!socket.current) {
+            socket.current = io(process.env.REACT_APP_API_URL);
+        }
+
+        socket.current.emit('joinRoom', groupName);
+
+        socket.current.off('receiveMessage');
+
+        socket.current.on('receiveMessage', (message) => {
+            console.log(message);
+        });
+
+        // return () => {
+        //     socket.disconnect();
+        // }
+    }
+
+    function sendMessage() {
+        if (socket.current) {
+            socket.current.emit('messageToRoom', { groupName: currentGroup, message: 'Testing!' });
+        } else {
+            console.error("Socket is not initialized");
+        }
+    }
+
     return (
         <>
             <Drawer
@@ -156,7 +189,7 @@ function Chat() {
                     <List>
                         {allGroups.map((groupName, index) => (
                             <ListItem key={index} disablePadding>
-                                <ListItemButton>
+                                <ListItemButton onClick={() => initializeChat(groupName)}>
                                     <ListItemIcon>
                                         <PeopleAltTwoToneIcon />
                                     </ListItemIcon>
@@ -226,6 +259,7 @@ function Chat() {
                     <Button onClick={() => setErrorDialogOpen(false)} autoFocus>Got it!</Button>
                 </DialogActions>
             </Dialog>
+            <Button style={{ marginLeft: "20rem" }} variant="contained" color="secondary" onClick={sendMessage}>Send message!</Button>
         </>
     );
 }

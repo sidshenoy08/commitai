@@ -292,6 +292,15 @@ app.post("/fetch-groups", async (request, response) => {
 io.on('connection', (socket) => {
     console.log("A user logged in!");
 
+    socket.on('joinRoom', (groupName) => {
+        socket.join(groupName);
+        console.log(`User joined group: ${groupName}`);
+    });
+
+    socket.on('messageToRoom', (data) => {
+        io.to(data.groupName).emit('receiveMessage', data.message);
+    });
+
     socket.on('disconnect', () => {
         console.log("A user disconnected!");
     })
