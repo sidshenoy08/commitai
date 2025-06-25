@@ -39,7 +39,7 @@ function Chat() {
     const [openChat, setOpenChat] = useState(false);
     const [retrievedMessages, setRetrievedMessages] = useState([]);
     const [currentMessage, setCurrentMessage] = useState({text: '', sentBy: '', sentAt: null});
-    const [sentMessages, setSentMessages] = useState([]);
+    const [activeMessages, setActiveMessages] = useState([]);
 
     let socket = useRef(null);
 
@@ -172,6 +172,13 @@ function Chat() {
     }
 
     function initializeChat(groupName) {
+        fetchChatHistory(groupName);
+        setActiveMessages([]);
+
+        if (currentGroup !== groupName && currentGroup !== '') {
+            socket.current.emit('leaveRoom', currentGroup);
+        }
+
         setCurrentGroup(groupName);
         setOpenChat(true);
 
@@ -184,12 +191,32 @@ function Chat() {
         socket.current.off('receiveMessage');
 
         socket.current.on('receiveMessage', (message) => {
-            setRetrievedMessages([...retrievedMessages, message]);
+            setActiveMessages(previousMessages => [...previousMessages, message]);
         });
 
         // return () => {
         //     socket.disconnect();
         // }
+    }
+
+    function fetchChatHistory(groupName) {
+        let group = {
+            name: groupName
+        };
+
+        const request = {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(group)
+        };
+
+        fetch(`${process.env.REACT_APP_API_URL}/fetch-messages`, request)
+            .then((response) => response.json())
+            .then((json) => setRetrievedMessages(json.messages))
+            .catch((err) => console.log(err));
     }
 
     function handleCurrentMessageChange(event) {
@@ -206,7 +233,7 @@ function Chat() {
         };
 
         if (socket.current) {
-            setSentMessages([...sentMessages, newMessage]);
+            setActiveMessages(previousMessages => [...previousMessages, newMessage]);
             socket.current.emit('messageToRoom', { groupName: currentGroup, message: newMessage });
 
             setCurrentMessage({text: '', sentBy: '', sentAt: null});
@@ -307,7 +334,7 @@ function Chat() {
                 {openChat ? <><Grid size={6}>
                     {retrievedMessages.map((message, index) => (
                         <MessageBox
-                            position='left'
+                            position={message.sentBy === currentUser ? 'right': 'left'}
                             type='text'
                             text={message.text}
                             replyButton={true}
@@ -316,9 +343,9 @@ function Chat() {
                             date={message.sentAt}
                         />
                     ))}
-                    {sentMessages.map((message, index) => (
+                    {activeMessages.map((message, index) => (
                         <MessageBox
-                            position='right'
+                            position={message.sentBy === currentUser ? 'right': 'left'}
                             type='text'
                             text={message.text}
                             replyButton={true}

@@ -295,16 +295,50 @@ app.post("/fetch-groups", async (request, response) => {
     }
 });
 
-io.on('connection', (socket) => {
-    console.log("A user logged in!");
+app.post("/fetch-messages", async (request, response) => {
+    const authTokenArray = request.header('authorization').split(" ");
+    if (authTokenArray[0] !== 'Bearer') {
+        response.status(401).json({ message: 'User token is not valid' });
+    } else {
+        try {
+            jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
+                if (error) {
+                    throw error;
+                } else {
+                    const messages = await Group.find({ name: request.body.name }, 'messages -_id');
+                    if (messages) {
+                        response.status(200).json({ messages: messages[0].messages, message: 'Messages fetched successfully' });
+                    } else {
+                        response.status(200).json({ messages: messages[0].messages, message: 'Messages fetched successfully' });
+                    }
+                }
+            });
+        } catch (error) {
+            console.log(error);
+            response.status(401).json({ message: 'User token has expired or is not valid!' });
+        }
+    }
+});
 
+io.on('connection', (socket) => {
     socket.on('joinRoom', (groupName) => {
         socket.join(groupName);
-        console.log(`User joined group: ${groupName}`);
     });
 
-    socket.on('messageToRoom', (data) => {
+    socket.on('messageToRoom', async (data) => {
         socket.to(data.groupName).emit('receiveMessage', data.message);
+        try {
+            const result = await Group.updateOne({ name: data.groupName }, { $push: { messages: data.message } });
+            if (!(result.matchedCount === 1) || !(result.modifiedCount === 1)) {
+                throw new Error("Group could either not be found or modified!");
+            }
+        } catch (error) {
+            console.log(`Something went wrong while saving the message! ${error}`);
+        }
+    });
+
+    socket.on('leaveRoom', (groupName) => {
+        socket.leave(groupName);
     });
 
     socket.on('disconnect', () => {
