@@ -13,6 +13,7 @@ import 'primereact/resources/themes/lara-light-indigo/theme.css';
 // 3. PrimeIcons (required for icons in buttons, etc.)
 import 'primeicons/primeicons.css';
 
+import "react-chat-elements/dist/main.css"
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

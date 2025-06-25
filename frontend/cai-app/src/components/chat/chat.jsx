@@ -22,6 +22,10 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import PeopleAltTwoToneIcon from '@mui/icons-material/PeopleAltTwoTone';
+import { Input } from 'react-chat-elements';
+import { MessageBox } from "react-chat-elements";
+import Grid from '@mui/material/Grid2';
+
 
 function Chat() {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -32,8 +36,10 @@ function Chat() {
     const [currentGroup, setCurrentGroup] = useState('');
     const [selectedMembers, setSelectedMembers] = useState([]);
     const [allGroups, setAllGroups] = useState([]);
-    // const [retrievedMessages, setRetrievedMessages] = useState([]);
-    // const [sentMessages, setSentMessages] = useState([]);
+    const [openChat, setOpenChat] = useState(false);
+    const [retrievedMessages, setRetrievedMessages] = useState([]);
+    const [currentMessage, setCurrentMessage] = useState('');
+    const [sentMessages, setSentMessages] = useState([]);
 
     let socket = useRef(null);
 
@@ -147,6 +153,7 @@ function Chat() {
 
     function initializeChat(groupName) {
         setCurrentGroup(groupName);
+        setOpenChat(true);
 
         if (!socket.current) {
             socket.current = io(process.env.REACT_APP_API_URL);
@@ -157,7 +164,7 @@ function Chat() {
         socket.current.off('receiveMessage');
 
         socket.current.on('receiveMessage', (message) => {
-            console.log(message);
+            setRetrievedMessages([...retrievedMessages, message]);
         });
 
         // return () => {
@@ -165,9 +172,14 @@ function Chat() {
         // }
     }
 
+    function handleCurrentMessageChange(event) {
+        setCurrentMessage(event.target.value);
+    }
+
     function sendMessage() {
         if (socket.current) {
-            socket.current.emit('messageToRoom', { groupName: currentGroup, message: 'Testing!' });
+            setSentMessages([...sentMessages, currentMessage]);
+            socket.current.emit('messageToRoom', { groupName: currentGroup, message: currentMessage });
         } else {
             console.error("Socket is not initialized");
         }
@@ -175,91 +187,121 @@ function Chat() {
 
     return (
         <>
-            <Drawer
-                variant="permanent"
-                sx={{
-                    width: 240,
-                    flexShrink: 0,
-                    [`& .MuiDrawer-paper`]: { width: 240, boxSizing: 'border-box' },
-                }}
-            >
-                <Toolbar />
-                <Button variant="contained" color="secondary" onClick={() => openDialog()}>Create Group</Button>
-                <Box sx={{ overflow: 'auto' }}>
-                    <List>
-                        {allGroups.map((groupName, index) => (
-                            <ListItem key={index} disablePadding>
-                                <ListItemButton onClick={() => initializeChat(groupName)}>
-                                    <ListItemIcon>
-                                        <PeopleAltTwoToneIcon />
-                                    </ListItemIcon>
-                                    <ListItemText primary={groupName} />
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
-                    </List>
-                </Box>
-            </Drawer>
-            <Dialog
-                open={dialogOpen}
-                onClose={() => setDialogOpen(false)}
-            >
-                <DialogTitle>Create a Group!</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Create a group with your friends to start chatting!
-                    </DialogContentText>
-                    <TextField
-                        required
-                        id="newGroupName"
-                        name="newGroupName"
-                        label="Group Name"
-                        fullWidth
-                        variant="standard"
-                        onChange={handleNewGroupNameChange}
-                    />
-                    <Autocomplete
-                        multiple={true}
-                        required
-                        placeholder="Add Members"
-                        options={allUsers}
-                        onChange={handleMemberSelection}
-                        sx={{ width: 300 }}
-                        slotProps={{
-                            listbox: {
-                                sx: (theme) => ({
-                                    zIndex: theme.vars.zIndex.modal
-                                })
-                            }
+            <Grid container spacing={2}>
+                <Grid size={4}>
+                    <Drawer
+                        variant="permanent"
+                        sx={{
+                            width: 240,
+                            flexShrink: 0,
+                            [`& .MuiDrawer-paper`]: { width: 240, boxSizing: 'border-box' },
                         }}
-                        noOptionsText="No users found!"
-                        startDecorator={<GroupAddIcon />}
+                    >
+                        <Toolbar />
+                        <Button variant="contained" color="secondary" onClick={() => openDialog()}>Create Group</Button>
+                        <Box sx={{ overflow: 'auto' }}>
+                            <List>
+                                {allGroups.map((groupName, index) => (
+                                    <ListItem key={index} disablePadding>
+                                        <ListItemButton onClick={() => initializeChat(groupName)}>
+                                            <ListItemIcon>
+                                                <PeopleAltTwoToneIcon />
+                                            </ListItemIcon>
+                                            <ListItemText primary={groupName} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Box>
+                    </Drawer>
+                </Grid>
+                <Dialog
+                    open={dialogOpen}
+                    onClose={() => setDialogOpen(false)}
+                >
+                    <DialogTitle>Create a Group!</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Create a group with your friends to start chatting!
+                        </DialogContentText>
+                        <TextField
+                            required
+                            id="newGroupName"
+                            name="newGroupName"
+                            label="Group Name"
+                            fullWidth
+                            variant="standard"
+                            onChange={handleNewGroupNameChange}
+                        />
+                        <Autocomplete
+                            multiple={true}
+                            required
+                            placeholder="Add Members"
+                            options={allUsers}
+                            onChange={handleMemberSelection}
+                            sx={{ width: 300 }}
+                            slotProps={{
+                                listbox: {
+                                    sx: (theme) => ({
+                                        zIndex: theme.vars.zIndex.modal
+                                    })
+                                }
+                            }}
+                            noOptionsText="No users found!"
+                            startDecorator={<GroupAddIcon />}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button variant="contained" color="error" startIcon={< CancelIcon />} onClick={() => cancelCreate()}>Cancel</Button>
+                        <Button variant="contained" color="success" endIcon={<AddIcon />} onClick={() => createGroup()}>Create</Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog
+                    open={errorDialogOpen}
+                    onClose={() => { setErrorDialogOpen(false) }}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">
+                        {"Group could not be created!"}
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            Group name cannot be blank and you MUST add at least one member!
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setErrorDialogOpen(false)} autoFocus>Got it!</Button>
+                    </DialogActions>
+                </Dialog>
+                {openChat ? <><Grid size={6}>
+                    {retrievedMessages.map((message, index) => (
+                        <MessageBox
+                        position='left'
+                        type='text'
+                        text={message}
+                        replyButton={true}
+                      />
+                    ))}
+                    {sentMessages.map((message, index) => (
+                        <MessageBox
+                        position='right'
+                        type='text'
+                        text={message}
+                        replyButton={true}
+                      />
+                    ))}
+                    <Input
+                        placeholder="Start chatting..."
+                        multiline={true}
+                        onChange={handleCurrentMessageChange}
                     />
-                </DialogContent>
-                <DialogActions>
-                    <Button variant="contained" color="error" startIcon={< CancelIcon />} onClick={() => cancelCreate()}>Cancel</Button>
-                    <Button variant="contained" color="success" endIcon={<AddIcon />} onClick={() => createGroup()}>Create</Button>
-                </DialogActions>
-            </Dialog>
-            <Dialog
-                open={errorDialogOpen}
-                onClose={() => { setErrorDialogOpen(false) }}
-                aria-labelledby="alert-dialog-title"
-                aria-describedby="alert-dialog-description"
-            >
-                <DialogTitle id="alert-dialog-title">
-                    {"Group could not be created!"}
-                </DialogTitle>
-                <DialogContent>
-                    <DialogContentText id="alert-dialog-description">
-                        Group name cannot be blank and you MUST add at least one member!
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setErrorDialogOpen(false)} autoFocus>Got it!</Button>
-                </DialogActions>
-            </Dialog>
-            <Button style={{ marginLeft: "20rem" }} variant="contained" color="secondary" onClick={sendMessage}>Send message!</Button>
+                </Grid>
+                    <Grid size={2}>
+                        <Button variant="contained" color="secondary" onClick={sendMessage}>Send message!</Button>
+                    </Grid></> : <Grid size={6}><h3>Create a new group or select one to get started!</h3></Grid>}
+
+            </Grid>
         </>
     );
 }

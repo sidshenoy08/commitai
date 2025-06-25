@@ -298,7 +298,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('messageToRoom', (data) => {
-        io.to(data.groupName).emit('receiveMessage', data.message);
+        socket.to(data.groupName).emit('receiveMessage', data.message);
     });
 
     socket.on('disconnect', () => {
