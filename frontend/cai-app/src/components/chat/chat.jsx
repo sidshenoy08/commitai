@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 import { io } from 'socket.io-client';
@@ -30,7 +30,7 @@ import Grid from '@mui/material/Grid2';
 function Chat() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [errorDialogOpen, setErrorDialogOpen] = useState(false);
-    // const [socket, setSocket] = useState(null);
+    const [currentUser, setCurrentUser] = useState('');
     const [allUsers, setAllUsers] = useState([]);
     const [newGroupName, setNewGroupName] = useState('');
     const [currentGroup, setCurrentGroup] = useState('');
@@ -38,18 +38,38 @@ function Chat() {
     const [allGroups, setAllGroups] = useState([]);
     const [openChat, setOpenChat] = useState(false);
     const [retrievedMessages, setRetrievedMessages] = useState([]);
-    const [currentMessage, setCurrentMessage] = useState('');
+    const [currentMessage, setCurrentMessage] = useState({text: '', sentBy: '', sentAt: null});
     const [sentMessages, setSentMessages] = useState([]);
 
     let socket = useRef(null);
 
     const navigate = useNavigate();
-    const logout = () => {
+    const logout = useCallback(() => {
         navigate('/');
-    };
+    }, [navigate]);
+
+    // useEffect(() => {
+    //     const interval = setInterval(() => {
+    //         const token = localStorage.getItem('jwtToken');
+    //         if (!token) {
+    //             logout();
+    //         } else {
+    //             const decodedToken = jwtDecode(token);
+    //             const currTime = Date.now() / 1000;
+    //             if (decodedToken.exp < currTime) {
+    //                 localStorage.removeItem('jwtToken');
+    //                 logout();
+    //             }
+    //         }
+    //     }, parseInt(process.env.REACT_APP_JWT_INTERVAL));
+    //     return () => clearInterval(interval);
+    // });
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        // const newSocket = io(process.env.REACT_APP_API_URL);
+        // setSocket(newSocket);
+
+        const checkToken = () => {
             const token = localStorage.getItem('jwtToken');
             if (!token) {
                 logout();
@@ -59,22 +79,22 @@ function Chat() {
                 if (decodedToken.exp < currTime) {
                     localStorage.removeItem('jwtToken');
                     logout();
+                } else {
+                    setCurrentUser(decodedToken.username);
                 }
             }
-        }, parseInt(process.env.REACT_APP_JWT_INTERVAL));
-        return () => clearInterval(interval);
-    });
+        };
 
-    useEffect(() => {
-        // const newSocket = io(process.env.REACT_APP_API_URL);
-        // setSocket(newSocket);
-
+        checkToken();
         fetchGroups();
 
+        const interval = setInterval(checkToken, parseInt(process.env.REACT_APP_JWT_INTERVAL));
+
+        return () => clearInterval(interval);
         // return () => {
         //     newSocket.disconnect();
         // };
-    }, []);
+    }, [logout]);
 
     function openDialog() {
         const request = {
@@ -173,15 +193,25 @@ function Chat() {
     }
 
     function handleCurrentMessageChange(event) {
-        setCurrentMessage(event.target.value);
+        setCurrentMessage({...currentMessage, text: event.target.value});
     }
 
     function sendMessage() {
+        if (currentMessage.text.trim() === '') return;
+        
+        const newMessage = {
+            ...currentMessage,
+            sentBy: currentUser,
+            sentAt: new Date()
+        };
+
         if (socket.current) {
-            setSentMessages([...sentMessages, currentMessage]);
-            socket.current.emit('messageToRoom', { groupName: currentGroup, message: currentMessage });
+            setSentMessages([...sentMessages, newMessage]);
+            socket.current.emit('messageToRoom', { groupName: currentGroup, message: newMessage });
+
+            setCurrentMessage({text: '', sentBy: '', sentAt: null});
         } else {
-            console.error("Socket is not initialized");
+            console.log("Socket is not initialized");
         }
     }
 
@@ -277,19 +307,25 @@ function Chat() {
                 {openChat ? <><Grid size={6}>
                     {retrievedMessages.map((message, index) => (
                         <MessageBox
-                        position='left'
-                        type='text'
-                        text={message}
-                        replyButton={true}
-                      />
+                            position='left'
+                            type='text'
+                            text={message.text}
+                            replyButton={true}
+                            title={message.sentBy}
+                            key={index}
+                            date={message.sentAt}
+                        />
                     ))}
                     {sentMessages.map((message, index) => (
                         <MessageBox
-                        position='right'
-                        type='text'
-                        text={message}
-                        replyButton={true}
-                      />
+                            position='right'
+                            type='text'
+                            text={message.text}
+                            replyButton={true}
+                            title={message.sentBy}
+                            key={index}
+                            date={message.sentAt}
+                        />
                     ))}
                     <Input
                         placeholder="Start chatting..."

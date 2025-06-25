@@ -55,7 +55,13 @@ const Post = mongoose.model('Post', {
 const Group = mongoose.model('Group', {
     name: { type: String },
     members: { type: [String] },
-    messages: { type: [String] }
+    messages: {
+        type: [{
+            text: { type: String },
+            sentBy: { type: String },
+            sentAt: { type: Date }
+        }]
+    }
 });
 
 function generateJWT(payload) {
