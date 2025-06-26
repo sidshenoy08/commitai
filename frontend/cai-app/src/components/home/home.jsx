@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 import { Button } from "@mui/material";
@@ -13,18 +13,21 @@ import Carousel from 'react-bootstrap/Carousel';
 import IconButton from '@mui/material/IconButton';
 import DeleteIcon from '@mui/icons-material/Delete';
 
+import NavigationBar from "../navigationbar/navigationbar";
+
 function Home() {
     const [caption, setCaption] = useState("");
     const [posts, setPosts] = useState([]);
     const [selectedImages, setSelectedImages] = useState([]);
 
     const navigate = useNavigate();
-    const logout = () => {
+    const logout = useCallback(() => {
+        localStorage.removeItem('jwtToken');
         navigate('/');
-    };
+    }, [navigate]);
 
     useEffect(() => {
-        const interval = setInterval(() => {
+        const checkToken = () => {
             const token = localStorage.getItem('jwtToken');
             if (!token) {
                 logout();
@@ -32,15 +35,17 @@ function Home() {
                 const decodedToken = jwtDecode(token);
                 const currTime = Date.now() / 1000;
                 if (decodedToken.exp < currTime) {
-                    localStorage.removeItem('jwtToken');
                     logout();
+                } else {
+                    fetchPosts();
                 }
             }
-        }, parseInt(process.env.REACT_APP_JWT_INTERVAL));
-        return () => clearInterval(interval);
-    });
+        };
 
-    useEffect(() => {
+        checkToken();
+    }, [logout]);
+
+    function fetchPosts() {
         const request = {
             method: 'POST',
             headers: {
@@ -52,7 +57,7 @@ function Home() {
             .then((response) => response.json())
             .then((json) => setPosts(json.posts))
             .catch((err) => console.log(err));
-    }, []);
+    }
 
     function selectImages(event) {
         setSelectedImages(Array.from(event.files));
@@ -116,73 +121,75 @@ function Home() {
             .catch((err) => console.log(err));
     }
 
-    return (<>
-        <h3>Home</h3>
-        <PrimeReactProvider>
-            <FileUpload mode="basic" name="imageupload" customUpload multiple accept="image/*" maxFileSize={1000000} onSelect={selectImages} />
-            <FloatLabel>
-                <InputTextarea id="caption" value={caption} onChange={(e) => setCaption(e.target.value)} rows={5} cols={30} />
-                <label htmlFor="caption">Caption</label>
-            </FloatLabel>
-        </PrimeReactProvider>
-        <Button variant="contained" color="secondary" onClick={upload}>Upload</Button>
-        {posts.length > 0 ?
-            <div>
-                <h1>Your Posts</h1>
-                <ImageList sx={{ width: '80%', height: '50%' }} cols={3}>
-                    {posts.map((post, index) => (
-                        post.paths.length > 1 ?
-                            <Carousel key={index} variant="dark" controls={false}>
-                                {post.paths.map((path, index) => (
-                                    <Carousel.Item key={post._id + "-" + index}>
-                                        <ImageListItem key={index}>
-                                            <img
-                                                src={`${process.env.REACT_APP_API_URL}/${path}`}
-                                                alt={post.caption}
-                                                loading="lazy"
-                                            />
-                                            <ImageListItemBar
-                                                title={post.caption}
-                                                subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
-                                                actionIcon={
-                                                    <IconButton
-                                                        sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
-                                                        aria-label={`Delete Post`}
-                                                        onClick={() => deletePost(post._id, post.uploadedBy)}
-                                                    >
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                }
-                                            />
-                                        </ImageListItem>
-                                    </Carousel.Item>
-                                ))}
-                            </Carousel>
-                            : <ImageListItem key={post._id}>
-                                <img
-                                    src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
-                                    alt={posts.caption}
-                                    loading="lazy"
-                                />
-                                <ImageListItemBar
-                                    title={post.caption}
-                                    subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
-                                    actionIcon={
-                                        <IconButton
-                                            sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
-                                            aria-label={`Delete Post`}
-                                            onClick={() => deletePost(post._id, post.uploadedBy)}
-                                        >
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    }
-                                />
-                            </ImageListItem>
-                    ))}
-                </ImageList>
-            </div>
-            : <h1>No Posts Yet!</h1>}
-    </>);
+    return (
+        <>
+            <NavigationBar isLoggedIn={true} onLogout={logout} />
+            <h3>Home</h3>
+            <PrimeReactProvider>
+                <FileUpload mode="basic" name="imageupload" customUpload multiple accept="image/*" maxFileSize={1000000} onSelect={selectImages} />
+                <FloatLabel>
+                    <InputTextarea id="caption" value={caption} onChange={(e) => setCaption(e.target.value)} rows={5} cols={30} />
+                    <label htmlFor="caption">Caption</label>
+                </FloatLabel>
+            </PrimeReactProvider>
+            <Button variant="contained" color="secondary" onClick={upload}>Upload</Button>
+            {posts.length > 0 ?
+                <div>
+                    <h1>Your Posts</h1>
+                    <ImageList sx={{ width: '80%', height: '50%' }} cols={3}>
+                        {posts.map((post, index) => (
+                            post.paths.length > 1 ?
+                                <Carousel key={index} variant="dark" controls={false}>
+                                    {post.paths.map((path, index) => (
+                                        <Carousel.Item key={post._id + "-" + index}>
+                                            <ImageListItem key={index}>
+                                                <img
+                                                    src={`${process.env.REACT_APP_API_URL}/${path}`}
+                                                    alt={post.caption}
+                                                    loading="lazy"
+                                                />
+                                                <ImageListItemBar
+                                                    title={post.caption}
+                                                    subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
+                                                    actionIcon={
+                                                        <IconButton
+                                                            sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
+                                                            aria-label={`Delete Post`}
+                                                            onClick={() => deletePost(post._id, post.uploadedBy)}
+                                                        >
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    }
+                                                />
+                                            </ImageListItem>
+                                        </Carousel.Item>
+                                    ))}
+                                </Carousel>
+                                : <ImageListItem key={post._id}>
+                                    <img
+                                        src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
+                                        alt={posts.caption}
+                                        loading="lazy"
+                                    />
+                                    <ImageListItemBar
+                                        title={post.caption}
+                                        subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
+                                        actionIcon={
+                                            <IconButton
+                                                sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
+                                                aria-label={`Delete Post`}
+                                                onClick={() => deletePost(post._id, post.uploadedBy)}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        }
+                                    />
+                                </ImageListItem>
+                        ))}
+                    </ImageList>
+                </div>
+                : <h1>No Posts Yet!</h1>}
+        </>);
 }
 
 export default Home;

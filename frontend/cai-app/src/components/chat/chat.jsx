@@ -26,6 +26,8 @@ import { Input } from 'react-chat-elements';
 import { MessageBox } from "react-chat-elements";
 import Grid from '@mui/material/Grid2';
 
+import NavigationBar from "../navigationbar/navigationbar";
+import AlertDialog from "../alertDialog/alertDialog";
 
 function Chat() {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -38,13 +40,14 @@ function Chat() {
     const [allGroups, setAllGroups] = useState([]);
     const [openChat, setOpenChat] = useState(false);
     const [retrievedMessages, setRetrievedMessages] = useState([]);
-    const [currentMessage, setCurrentMessage] = useState({text: '', sentBy: '', sentAt: null});
+    const [currentMessage, setCurrentMessage] = useState({ text: '', sentBy: '', sentAt: null });
     const [activeMessages, setActiveMessages] = useState([]);
 
     let socket = useRef(null);
 
     const navigate = useNavigate();
     const logout = useCallback(() => {
+        localStorage.removeItem('jwtToken');
         navigate('/');
     }, [navigate]);
 
@@ -77,7 +80,6 @@ function Chat() {
                 const decodedToken = jwtDecode(token);
                 const currTime = Date.now() / 1000;
                 if (decodedToken.exp < currTime) {
-                    localStorage.removeItem('jwtToken');
                     logout();
                 } else {
                     setCurrentUser(decodedToken.username);
@@ -220,12 +222,12 @@ function Chat() {
     }
 
     function handleCurrentMessageChange(event) {
-        setCurrentMessage({...currentMessage, text: event.target.value});
+        setCurrentMessage({ ...currentMessage, text: event.target.value });
     }
 
     function sendMessage() {
         if (currentMessage.text.trim() === '') return;
-        
+
         const newMessage = {
             ...currentMessage,
             sentBy: currentUser,
@@ -236,14 +238,19 @@ function Chat() {
             setActiveMessages(previousMessages => [...previousMessages, newMessage]);
             socket.current.emit('messageToRoom', { groupName: currentGroup, message: newMessage });
 
-            setCurrentMessage({text: '', sentBy: '', sentAt: null});
+            setCurrentMessage({ text: '', sentBy: '', sentAt: null });
         } else {
             console.log("Socket is not initialized");
         }
     }
 
+    function closeErrorDialog() {
+        setErrorDialogOpen(false);
+    }
+
     return (
         <>
+            <NavigationBar isLoggedIn={true} />
             <Grid container spacing={2}>
                 <Grid size={4}>
                     <Drawer
@@ -313,28 +320,11 @@ function Chat() {
                         <Button variant="contained" color="success" endIcon={<AddIcon />} onClick={() => createGroup()}>Create</Button>
                     </DialogActions>
                 </Dialog>
-                <Dialog
-                    open={errorDialogOpen}
-                    onClose={() => { setErrorDialogOpen(false) }}
-                    aria-labelledby="alert-dialog-title"
-                    aria-describedby="alert-dialog-description"
-                >
-                    <DialogTitle id="alert-dialog-title">
-                        {"Group could not be created!"}
-                    </DialogTitle>
-                    <DialogContent>
-                        <DialogContentText id="alert-dialog-description">
-                            Group name cannot be blank and you MUST add at least one member!
-                        </DialogContentText>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setErrorDialogOpen(false)} autoFocus>Got it!</Button>
-                    </DialogActions>
-                </Dialog>
+                <AlertDialog isOpen={errorDialogOpen} closeDialog={closeErrorDialog} title={"Group could not be created!"} content={"Group name cannot be blank and you MUST add at least one member!"} />
                 {openChat ? <><Grid size={6}>
                     {retrievedMessages.map((message, index) => (
                         <MessageBox
-                            position={message.sentBy === currentUser ? 'right': 'left'}
+                            position={message.sentBy === currentUser ? 'right' : 'left'}
                             type='text'
                             text={message.text}
                             replyButton={true}
@@ -345,7 +335,7 @@ function Chat() {
                     ))}
                     {activeMessages.map((message, index) => (
                         <MessageBox
-                            position={message.sentBy === currentUser ? 'right': 'left'}
+                            position={message.sentBy === currentUser ? 'right' : 'left'}
                             type='text'
                             text={message.text}
                             replyButton={true}

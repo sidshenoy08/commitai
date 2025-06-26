@@ -4,16 +4,12 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import NavigationBar from '../navigationbar/navigationbar';
+import AlertDialog from '../alertDialog/alertDialog';
 
 import './login.css';
 
@@ -39,6 +35,10 @@ function Login() {
 
     function handlePasswordChange(event) {
         setPassword(event.target.value);
+    }
+
+    function closeDialog() {
+        setDialogOpen(false);
     }
 
     async function login() {
@@ -68,6 +68,7 @@ function Login() {
                 }
                 )
                 .then((json) => {
+                    console.log(json.token);
                     localStorage.setItem('jwtToken', json.token);
                 })
                 .then(() => redirectToHome())
@@ -77,7 +78,7 @@ function Login() {
 
     return (
         <>
-            <NavigationBar />
+            <NavigationBar isLoggedIn={false} />
             <div className='body'>
                 <h2 className='header-text'>Commit AI</h2>
                 <Box>
@@ -122,7 +123,8 @@ function Login() {
                         </Grid>
                     </Grid>
                 </Box>
-                <Dialog
+                <AlertDialog isOpen={dialogOpen} closeDialog={closeDialog} title={"Username or Password missing!"} content={"The username AND the password cannot be blank!"} />
+                {/* <Dialog
                     open={dialogOpen}
                     onClose={() => { setDialogOpen(false) }}
                     aria-labelledby="alert-dialog-title"
@@ -139,7 +141,7 @@ function Login() {
                     <DialogActions>
                         <Button onClick={() => setDialogOpen(false)} autoFocus>Got it!</Button>
                     </DialogActions>
-                </Dialog>
+                </Dialog> */}
             </div>
         </>
     );
