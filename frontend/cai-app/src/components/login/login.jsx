@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import NavigationBar from '../navigationbar/navigationbar';
 import AlertDialog from '../alertDialog/alertDialog';
 
-import './login.css';
+import styles from './login.module.css';
 
 function Login() {
     const [username, setUsername] = useState("");
@@ -79,8 +79,8 @@ function Login() {
     return (
         <>
             <NavigationBar isLoggedIn={false} />
-            <div className='body'>
-                <h2 className='header-text'>Commit AI</h2>
+            <div className={styles.body}>
+                <h2 className={styles.headerText}>Commit AI</h2>
                 <Box>
                     <Grid container>
                         <Grid size={6}>
