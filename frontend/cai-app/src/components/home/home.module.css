@@ -1,9 +1,9 @@
 .body {
     background-color: #ADEED9;
-    height: 100vh;
+    min-height: 100vh;
     width: 100vw;
     display: flex;
-    justify-content: center;
+    /* justify-content: center; */
     align-items: center;
     flex-direction: column;
     text-align: center;
@@ -12,8 +12,8 @@
 .headerText {
     color: #222831;
     text-align: center;
-    padding-top: 2rem;
     padding-bottom: 2rem;
+    padding-top: 2rem;
 }
 
 .interHeader {
@@ -31,4 +31,9 @@
     font-variation-settings:
         "wdth" 100,
         "YTLC" 500;
+}
+
+.captionInput {
+    margin-top: 2rem;
+    width: 100%;
 }

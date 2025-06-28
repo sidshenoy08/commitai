@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
-import { Button } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { FileUpload } from 'primereact/fileupload';
 import { InputTextarea } from 'primereact/inputtextarea';
-import { FloatLabel } from 'primereact/floatlabel';
 import { PrimeReactProvider } from 'primereact/api';
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
@@ -100,6 +99,8 @@ function Home() {
             .then((response) => response.json())
             .then(() => {
                 refreshFeed();
+                setCaption("");
+                setSelectedImages([]);
                 setPostDialogOpen(false);
             })
             .catch((err) => console.log(err));
@@ -153,10 +154,7 @@ function Home() {
                     <DialogContent>
                         <PrimeReactProvider>
                             <FileUpload mode="basic" name="imageupload" customUpload multiple accept="image/*" maxFileSize={1000000} onSelect={selectImages} />
-                            <FloatLabel>
-                                <InputTextarea id="caption" value={caption} onChange={(e) => setCaption(e.target.value)} rows={5} cols={30} />
-                                <label htmlFor="caption">Caption</label>
-                            </FloatLabel>
+                            <InputTextarea className={styles.captionInput} id="caption" value={caption} onChange={(e) => setCaption(e.target.value)} rows={5} cols={30} placeholder="Caption" />
                         </PrimeReactProvider>
                     </DialogContent>
                     <DialogActions>
@@ -167,57 +165,78 @@ function Home() {
                 {posts.length > 0 ?
                     <div>
                         <h4 className={styles.nunitoSansBody}>Your Feed</h4>
-                        <ImageList sx={{ width: '80%', height: '50%' }} cols={3}>
-                            {posts.map((post, index) => (
-                                post.paths.length > 1 ?
-                                    <Carousel key={index} variant="dark" controls={false}>
-                                        {post.paths.map((path, index) => (
-                                            <Carousel.Item key={post._id + "-" + index}>
-                                                <ImageListItem key={index}>
-                                                    <img
-                                                        src={`${process.env.REACT_APP_API_URL}/${path}`}
-                                                        alt={post.caption}
-                                                        loading="lazy"
-                                                    />
-                                                    <ImageListItemBar
-                                                        title={post.caption}
-                                                        subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
-                                                        actionIcon={
-                                                            <IconButton
-                                                                sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
-                                                                aria-label={`Delete Post`}
-                                                                onClick={() => deletePost(post._id, post.uploadedBy)}
-                                                            >
-                                                                <DeleteIcon />
-                                                            </IconButton>
-                                                        }
-                                                    />
-                                                </ImageListItem>
-                                            </Carousel.Item>
-                                        ))}
-                                    </Carousel>
-                                    : <ImageListItem key={post._id}>
-                                        <img
-                                            src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
-                                            alt={posts.caption}
-                                            loading="lazy"
-                                        />
-                                        <ImageListItemBar
-                                            title={post.caption}
-                                            subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
-                                            actionIcon={
-                                                <IconButton
-                                                    sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
-                                                    aria-label={`Delete Post`}
-                                                    onClick={() => deletePost(post._id, post.uploadedBy)}
-                                                >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                            }
-                                        />
-                                    </ImageListItem>
-                            ))}
-                        </ImageList>
+                        <Box sx={{ overflowY: 'visible', overflowX: 'hidden', display: 'flex', justifyContent: 'center', width: '100%' }}>
+                            <ImageList sx={{ backgroundColor: "#F8F8F8", width: '100%', maxWidth: '1000px'}} cols={3} gap={10} rowHeight={250}>
+                                {posts.map((post, index) => (
+                                    post.paths.length > 1 ?
+                                        <ImageListItem key={index}>
+                                            <Carousel key={index} variant="dark" controls={false}>
+                                                {post.paths.map((path, index) => (
+                                                    <Carousel.Item key={post._id + "-" + index}>
+                                                        <Box sx={{
+                                                            width: '100%',
+                                                            height: '250px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            overflow: 'hidden'
+                                                        }}>
+                                                            <img
+                                                                src={`${process.env.REACT_APP_API_URL}/${path}`}
+                                                                alt={post.caption}
+                                                                loading="lazy"
+                                                                style={{
+                                                                    maxWidth: '100%',
+                                                                    objectFit: 'contain',
+                                                                    height: 'auto'
+                                                                }}
+                                                            />
+                                                        </Box>
+                                                    </Carousel.Item>
+                                                ))}
+                                            </Carousel>
+                                            <ImageListItemBar
+                                                title={post.caption}
+                                                subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
+                                                actionIcon={
+                                                    <IconButton
+                                                        sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
+                                                        aria-label={`Delete Post`}
+                                                        onClick={() => deletePost(post._id, post.uploadedBy)}
+                                                    >
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                }
+                                            />
+                                        </ImageListItem>
+                                        : <ImageListItem key={post._id}>
+                                            <img
+                                                src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
+                                                alt={posts.caption}
+                                                loading="lazy"
+                                                style={{
+                                                    width: '100%',
+                                                    height: '250px',
+                                                    objectFit: 'cover'
+                                                }}
+                                            />
+                                            <ImageListItemBar
+                                                title={post.caption}
+                                                subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
+                                                actionIcon={
+                                                    <IconButton
+                                                        sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
+                                                        aria-label={`Delete Post`}
+                                                        onClick={() => deletePost(post._id, post.uploadedBy)}
+                                                    >
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                }
+                                            />
+                                        </ImageListItem>
+                                ))}
+                            </ImageList>
+                        </Box>
                     </div>
                     : <div>
                         <h4>No Posts Yet!</h4>
@@ -234,7 +253,7 @@ function Home() {
                 <Button onClick={() => setPostDialogOpen(true)} style={{ margin: "2rem" }} variant="contained" endIcon={<AddPhotoAlternateIcon />}>
                     Create Post
                 </Button>
-            </div>
+            </div >
         </>);
 }
 
