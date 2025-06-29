@@ -18,16 +18,22 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Paper from '@mui/material/Paper';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import Modal from '@mui/joy/Modal';
+import ModalClose from '@mui/joy/ModalClose';
+import Typography from '@mui/joy/Typography';
 
 import NavigationBar from "../navigationbar/navigationbar";
 
 import styles from './home.module.css';
+import { ModalDialog } from "@mui/joy";
 
 function Home() {
     const [caption, setCaption] = useState("");
     const [posts, setPosts] = useState([]);
     const [selectedImages, setSelectedImages] = useState([]);
     const [postDialogOpen, setPostDialogOpen] = useState(false);
+    const [postOpen, setPostOpen] = useState(false);
+    const [multiPostOpen, setMultiPostOpen] = useState(false);
 
     const navigate = useNavigate();
     const logout = useCallback(() => {
@@ -166,74 +172,173 @@ function Home() {
                     <div>
                         <h4 className={styles.nunitoSansBody}>Your Feed</h4>
                         <Box sx={{ overflowY: 'visible', overflowX: 'hidden', display: 'flex', justifyContent: 'center', width: '100%' }}>
-                            <ImageList sx={{ backgroundColor: "#F8F8F8", width: '100%', maxWidth: '1000px'}} cols={3} gap={10} rowHeight={250}>
+                            <ImageList sx={{ backgroundColor: "#F8F8F8", width: '100%', maxWidth: '1000px' }} cols={3} gap={10} rowHeight={250}>
                                 {posts.map((post, index) => (
                                     post.paths.length > 1 ?
-                                        <ImageListItem key={index}>
-                                            <Carousel key={index} variant="dark" controls={false}>
-                                                {post.paths.map((path, index) => (
-                                                    <Carousel.Item key={post._id + "-" + index}>
-                                                        <Box sx={{
-                                                            width: '100%',
-                                                            height: '250px',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            overflow: 'hidden'
-                                                        }}>
-                                                            <img
-                                                                src={`${process.env.REACT_APP_API_URL}/${path}`}
-                                                                alt={post.caption}
-                                                                loading="lazy"
-                                                                style={{
-                                                                    maxWidth: '100%',
-                                                                    objectFit: 'contain',
-                                                                    height: 'auto'
-                                                                }}
-                                                            />
-                                                        </Box>
-                                                    </Carousel.Item>
-                                                ))}
-                                            </Carousel>
-                                            <ImageListItemBar
-                                                title={post.caption}
-                                                subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
-                                                actionIcon={
-                                                    <IconButton
-                                                        sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
-                                                        aria-label={`Delete Post`}
-                                                        onClick={() => deletePost(post._id, post.uploadedBy)}
-                                                    >
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                }
-                                            />
-                                        </ImageListItem>
-                                        : <ImageListItem key={post._id}>
-                                            <img
-                                                src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
-                                                alt={posts.caption}
-                                                loading="lazy"
-                                                style={{
+                                        <>
+                                            <ImageListItem key={index} onClick={() => setMultiPostOpen(true)}>
+                                                <Carousel key={index} variant="dark" controls={false}>
+                                                    {post.paths.map((path, index) => (
+                                                        <Carousel.Item key={post._id + "-" + index}>
+                                                            <Box sx={{
+                                                                width: '100%',
+                                                                height: '250px',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                overflow: 'hidden'
+                                                            }}>
+                                                                <img
+                                                                    src={`${process.env.REACT_APP_API_URL}/${path}`}
+                                                                    alt={post.caption}
+                                                                    loading="lazy"
+                                                                    style={{
+                                                                        maxWidth: '100%',
+                                                                        objectFit: 'contain',
+                                                                        height: 'auto'
+                                                                    }}
+                                                                />
+                                                            </Box>
+                                                        </Carousel.Item>
+                                                    ))}
+                                                </Carousel>
+                                                <ImageListItemBar
+                                                    title={post.caption}
+                                                    subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
+                                                    actionIcon={
+                                                        <IconButton
+                                                            sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
+                                                            aria-label={`Delete Post`}
+                                                            onClick={() => deletePost(post._id, post.uploadedBy)}
+                                                        >
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    }
+                                                />
+                                            </ImageListItem>
+                                            <Modal
+                                                aria-labelledby="modal-title"
+                                                aria-describedby="modal-desc"
+                                                open={multiPostOpen}
+                                                onClose={() => setMultiPostOpen(false)}
+                                                sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                            >
+                                                <ModalDialog layout="center" sx={{
+                                                    borderRadius: 'lg',
+                                                    boxShadow: 'lg',
+                                                    maxWidth: 600,
                                                     width: '100%',
-                                                    height: '250px',
-                                                    objectFit: 'cover'
-                                                }}
-                                            />
-                                            <ImageListItemBar
-                                                title={post.caption}
-                                                subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
-                                                actionIcon={
-                                                    <IconButton
-                                                        sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
-                                                        aria-label={`Delete Post`}
-                                                        onClick={() => deletePost(post._id, post.uploadedBy)}
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    <ModalClose variant="plain" sx={{ m: 1 }} />
+                                                    <Carousel key={index} variant="dark" controls={false}>
+                                                        {post.paths.map((path, index) => (
+                                                            <Carousel.Item key={post._id + "-" + index}>
+                                                                <Box sx={{
+                                                                    width: '100%',
+                                                                    height: '250px',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    overflow: 'hidden'
+                                                                }}>
+                                                                    <img
+                                                                        src={`${process.env.REACT_APP_API_URL}/${path}`}
+                                                                        alt={post.caption}
+                                                                        loading="lazy"
+                                                                        style={{
+                                                                            maxWidth: '100%',
+                                                                            objectFit: 'contain',
+                                                                            height: 'auto'
+                                                                        }}
+                                                                    />
+                                                                </Box>
+                                                            </Carousel.Item>
+                                                        ))}
+                                                    </Carousel>
+                                                    <Typography
+                                                        component="h4"
+                                                        id="modal-title"
+                                                        level="h4"
+                                                        textColor="inherit"
+                                                        sx={{ fontWeight: 'lg', mb: 1, textAlign: 'center' }}
                                                     >
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                }
-                                            />
-                                        </ImageListItem>
+                                                        {post.caption}
+                                                    </Typography>
+                                                    <Typography id="modal-desc" textColor="text.tertiary">
+                                                        Uploaded on: {post.uploadedOn}
+                                                    </Typography>
+                                                </ModalDialog>
+                                            </Modal>
+                                        </>
+                                        : <>
+                                            <ImageListItem key={post._id} onClick={() => setPostOpen(true)}>
+                                                <img
+                                                    src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
+                                                    alt={post.caption}
+                                                    loading="lazy"
+                                                    style={{
+                                                        width: '100%',
+                                                        height: '250px',
+                                                        objectFit: 'cover'
+                                                    }}
+                                                />
+                                                <ImageListItemBar
+                                                    title={post.caption}
+                                                    subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
+                                                    actionIcon={
+                                                        <IconButton
+                                                            sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
+                                                            aria-label={`Delete Post`}
+                                                            onClick={() => deletePost(post._id, post.uploadedBy)}
+                                                        >
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    }
+                                                />
+                                            </ImageListItem>
+                                            <Modal
+                                                aria-labelledby="modal-title"
+                                                aria-describedby="modal-desc"
+                                                open={postOpen}
+                                                onClose={() => setPostOpen(false)}
+                                                sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                            >
+                                                <ModalDialog layout="center" sx={{
+                                                    borderRadius: 'lg',
+                                                    boxShadow: 'lg',
+                                                    maxWidth: 600,
+                                                    width: '100%',
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    <ModalClose variant="plain" sx={{ m: 1 }} />
+                                                    <img
+                                                        src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
+                                                        alt={post.caption}
+                                                        loading="lazy"
+                                                        style={{
+                                                            width: '100%',
+                                                            height: 'auto',
+                                                            display: 'block',
+                                                            borderRadius: 'sm',
+                                                            marginBottom: '1rem'
+                                                        }}
+                                                    />
+                                                    <Typography
+                                                        component="h4"
+                                                        id="modal-title"
+                                                        level="h4"
+                                                        textColor="inherit"
+                                                        sx={{ fontWeight: 'lg', mb: 1, textAlign: 'center' }}
+                                                    >
+                                                        {post.caption}
+                                                    </Typography>
+                                                    <Typography id="modal-desc" textColor="text.tertiary">
+                                                        Uploaded on: {post.uploadedOn}
+                                                    </Typography>
+                                                </ModalDialog>
+                                            </Modal>
+                                        </>
                                 ))}
                             </ImageList>
                         </Box>
