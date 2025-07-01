@@ -22,7 +22,8 @@ function PostModal({ post, setPost, isMultiImagePost }) {
                     boxShadow: 'lg',
                     maxWidth: 600,
                     width: '100%',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    backgroundColor: '#FFFFFF'
                 }}>
                     <ModalClose variant="plain" sx={{ m: 1 }} />
                     {post && <>
@@ -33,11 +34,11 @@ function PostModal({ post, setPost, isMultiImagePost }) {
                                     <Carousel.Item key={post._id + "-" + index}>
                                         <Box sx={{
                                             width: '100%',
-                                            height: '250px',
+                                            maxHeight: '1500px',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            overflow: 'hidden'
+                                            overflowY: 'scroll'
                                         }}>
                                             <img
                                                 src={`${process.env.REACT_APP_API_URL}/${path}`}
@@ -46,7 +47,8 @@ function PostModal({ post, setPost, isMultiImagePost }) {
                                                 style={{
                                                     maxWidth: '100%',
                                                     objectFit: 'contain',
-                                                    height: 'auto'
+                                                    height: 'auto',
+                                                    maxHeight: '100%'
                                                 }}
                                             />
                                         </Box>
@@ -66,19 +68,8 @@ function PostModal({ post, setPost, isMultiImagePost }) {
                                         borderRadius: 'sm',
                                         marginBottom: '1rem'
                                     }}
-                                /></>}
-                        {/* <img
-                            src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
-                            alt={post.caption}
-                            loading="lazy"
-                            style={{
-                                width: '100%',
-                                height: 'auto',
-                                display: 'block',
-                                borderRadius: 'sm',
-                                marginBottom: '1rem'
-                            }}
-                        /> */}
+                                />
+                            </>}
                         <Typography
                             component="h4"
                             id="modal-title"
