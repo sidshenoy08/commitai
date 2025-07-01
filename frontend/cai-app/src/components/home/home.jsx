@@ -18,22 +18,19 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import Paper from '@mui/material/Paper';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import Modal from '@mui/joy/Modal';
-import ModalClose from '@mui/joy/ModalClose';
-import Typography from '@mui/joy/Typography';
 
 import NavigationBar from "../navigationbar/navigationbar";
 
 import styles from './home.module.css';
-import { ModalDialog } from "@mui/joy";
+import PostModal from "../postModal/postModal";
 
 function Home() {
     const [caption, setCaption] = useState("");
     const [posts, setPosts] = useState([]);
     const [selectedImages, setSelectedImages] = useState([]);
     const [postDialogOpen, setPostDialogOpen] = useState(false);
-    const [postOpen, setPostOpen] = useState(false);
-    const [multiPostOpen, setMultiPostOpen] = useState(false);
+    const [selectedPost, setSelectedPost] = useState(null);
+    const [isMultiImagePost, setIsMultiImagePost] = useState(false);
 
     const navigate = useNavigate();
     const logout = useCallback(() => {
@@ -51,13 +48,16 @@ function Home() {
                 const currTime = Date.now() / 1000;
                 if (decodedToken.exp < currTime) {
                     logout();
-                } else {
-                    fetchPosts();
                 }
             }
         };
 
         checkToken();
+        fetchPosts();
+
+        const interval = setInterval(checkToken, parseInt(process.env.REACT_APP_JWT_INTERVAL));
+
+        return () => clearInterval(interval);
     }, [logout]);
 
     function fetchPosts() {
@@ -176,7 +176,7 @@ function Home() {
                                 {posts.map((post, index) => (
                                     post.paths.length > 1 ?
                                         <>
-                                            <ImageListItem key={index} onClick={() => setMultiPostOpen(true)}>
+                                            <ImageListItem key={index}>
                                                 <Carousel key={index} variant="dark" controls={false}>
                                                     {post.paths.map((path, index) => (
                                                         <Carousel.Item key={post._id + "-" + index}>
@@ -197,6 +197,10 @@ function Home() {
                                                                         objectFit: 'contain',
                                                                         height: 'auto'
                                                                     }}
+                                                                    onClick={() => {
+                                                                        setSelectedPost(post);
+                                                                        setIsMultiImagePost(true);
+                                                                    }}
                                                                 />
                                                             </Box>
                                                         </Carousel.Item>
@@ -216,63 +220,9 @@ function Home() {
                                                     }
                                                 />
                                             </ImageListItem>
-                                            <Modal
-                                                aria-labelledby="modal-title"
-                                                aria-describedby="modal-desc"
-                                                open={multiPostOpen}
-                                                onClose={() => setMultiPostOpen(false)}
-                                                sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                            >
-                                                <ModalDialog layout="center" sx={{
-                                                    borderRadius: 'lg',
-                                                    boxShadow: 'lg',
-                                                    maxWidth: 600,
-                                                    width: '100%',
-                                                    overflow: 'hidden'
-                                                }}>
-                                                    <ModalClose variant="plain" sx={{ m: 1 }} />
-                                                    <Carousel key={index} variant="dark" controls={false}>
-                                                        {post.paths.map((path, index) => (
-                                                            <Carousel.Item key={post._id + "-" + index}>
-                                                                <Box sx={{
-                                                                    width: '100%',
-                                                                    height: '250px',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    overflow: 'hidden'
-                                                                }}>
-                                                                    <img
-                                                                        src={`${process.env.REACT_APP_API_URL}/${path}`}
-                                                                        alt={post.caption}
-                                                                        loading="lazy"
-                                                                        style={{
-                                                                            maxWidth: '100%',
-                                                                            objectFit: 'contain',
-                                                                            height: 'auto'
-                                                                        }}
-                                                                    />
-                                                                </Box>
-                                                            </Carousel.Item>
-                                                        ))}
-                                                    </Carousel>
-                                                    <Typography
-                                                        component="h4"
-                                                        id="modal-title"
-                                                        level="h4"
-                                                        textColor="inherit"
-                                                        sx={{ fontWeight: 'lg', mb: 1, textAlign: 'center' }}
-                                                    >
-                                                        {post.caption}
-                                                    </Typography>
-                                                    <Typography id="modal-desc" textColor="text.tertiary">
-                                                        Uploaded on: {post.uploadedOn}
-                                                    </Typography>
-                                                </ModalDialog>
-                                            </Modal>
                                         </>
                                         : <>
-                                            <ImageListItem key={post._id} onClick={() => setPostOpen(true)}>
+                                            <ImageListItem key={post._id}>
                                                 <img
                                                     src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
                                                     alt={post.caption}
@@ -281,6 +231,10 @@ function Home() {
                                                         width: '100%',
                                                         height: '250px',
                                                         objectFit: 'cover'
+                                                    }}
+                                                    onClick={() => {
+                                                        setSelectedPost(post);
+                                                        setIsMultiImagePost(false);
                                                     }}
                                                 />
                                                 <ImageListItemBar
@@ -297,49 +251,9 @@ function Home() {
                                                     }
                                                 />
                                             </ImageListItem>
-                                            <Modal
-                                                aria-labelledby="modal-title"
-                                                aria-describedby="modal-desc"
-                                                open={postOpen}
-                                                onClose={() => setPostOpen(false)}
-                                                sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                            >
-                                                <ModalDialog layout="center" sx={{
-                                                    borderRadius: 'lg',
-                                                    boxShadow: 'lg',
-                                                    maxWidth: 600,
-                                                    width: '100%',
-                                                    overflow: 'hidden'
-                                                }}>
-                                                    <ModalClose variant="plain" sx={{ m: 1 }} />
-                                                    <img
-                                                        src={`${process.env.REACT_APP_API_URL}/${post.paths[0]}`}
-                                                        alt={post.caption}
-                                                        loading="lazy"
-                                                        style={{
-                                                            width: '100%',
-                                                            height: 'auto',
-                                                            display: 'block',
-                                                            borderRadius: 'sm',
-                                                            marginBottom: '1rem'
-                                                        }}
-                                                    />
-                                                    <Typography
-                                                        component="h4"
-                                                        id="modal-title"
-                                                        level="h4"
-                                                        textColor="inherit"
-                                                        sx={{ fontWeight: 'lg', mb: 1, textAlign: 'center' }}
-                                                    >
-                                                        {post.caption}
-                                                    </Typography>
-                                                    <Typography id="modal-desc" textColor="text.tertiary">
-                                                        Uploaded on: {post.uploadedOn}
-                                                    </Typography>
-                                                </ModalDialog>
-                                            </Modal>
                                         </>
                                 ))}
+                                <PostModal post={selectedPost} setPost={setSelectedPost} isMultiImagePost={isMultiImagePost} />
                             </ImageList>
                         </Box>
                     </div>
