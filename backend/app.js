@@ -7,6 +7,7 @@ const multer = require('multer');
 const path = require('path');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const fsPromises = require('fs/promises');
 
 require('dotenv').config();
 
@@ -193,8 +194,17 @@ app.post("/delete-post", async (request, response) => {
                 if (error) {
                     throw error;
                 } else {
-                    const result = await Post.deleteOne({ _id: request.body.postId, uploadedBy: request.body.username });
-                    if (result.deletedCount === 1) {
+                    const post = await Post.findOneAndDelete({ _id: request.body.postId, uploadedBy: request.body.username });
+                    if (post) {
+                        post.paths.map(async (path) => {
+                            try {
+                                await fsPromises.unlink(path);
+                            } catch (error) {
+                                console.log(error);
+                                response.status(500).json({ message: 'Files could not be deleted from internal storage' });
+                            }
+                            
+                        });
                         response.status(200).json({ message: 'Post deleted successfully' });
                     } else {
                         response.status(500).json({ message: 'Post could not be deleted!' });
