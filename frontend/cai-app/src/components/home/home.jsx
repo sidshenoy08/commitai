@@ -208,7 +208,7 @@ function Home() {
                                                 </Carousel>
                                                 <ImageListItemBar
                                                     title={post.caption}
-                                                    subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
+                                                    subtitle={new Date(Date.parse(post.uploadedOn)).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}
                                                     actionIcon={
                                                         <IconButton
                                                             sx={{ color: 'rgba(255, 255, 255, 0.54)' }}
@@ -239,7 +239,7 @@ function Home() {
                                                 />
                                                 <ImageListItemBar
                                                     title={post.caption}
-                                                    subtitle={new Date(Date.parse(post.uploadedOn)).toString()}
+                                                    subtitle={new Date(Date.parse(post.uploadedOn)).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}
                                                     actionIcon={
                                                         <IconButton
                                                             sx={{ color: 'rgba(255, 255, 255, 0.54)' }}

@@ -89,7 +89,7 @@ function PostModal({ post, setPost, isMultiImagePost }) {
                             {post.caption}
                         </Typography>
                         <Typography id="modal-desc" textColor="text.tertiary">
-                            Uploaded on: {post.uploadedOn}
+                            Uploaded on: {new Date(Date.parse(post.uploadedOn)).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' })}
                         </Typography>
                     </>}
                 </ModalDialog>
