@@ -4,8 +4,9 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { jwtDecode } from 'jwt-decode';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import NavigationBar from '../navigationbar/navigationbar';
@@ -21,9 +22,20 @@ function Login() {
 
     const navigate = useNavigate();
 
-    const redirectToHome = () => {
+    const redirectToHome = useCallback (() => {
         navigate('/home');
-    }
+    }, [navigate]);
+
+    useEffect(() => {
+        const token = localStorage.getItem('jwtToken');
+        if (token) {
+            const decodedToken = jwtDecode(token);
+            const currTime = Date.now() / 1000;
+            if (decodedToken.exp > currTime) {
+                redirectToHome();
+            }
+        }
+    }, [redirectToHome]);
 
     function togglePasswordVisibility() {
         setShowPassword(!showPassword);
