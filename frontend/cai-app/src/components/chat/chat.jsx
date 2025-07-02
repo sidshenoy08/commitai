@@ -25,9 +25,14 @@ import PeopleAltTwoToneIcon from '@mui/icons-material/PeopleAltTwoTone';
 import { Input } from 'react-chat-elements';
 import { MessageBox } from "react-chat-elements";
 import Grid from '@mui/material/Grid2';
+import SendIcon from '@mui/icons-material/Send';
+import IconButton from "@mui/material/IconButton";
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 import NavigationBar from "../navigationbar/navigationbar";
 import AlertDialog from "../alertDialog/alertDialog";
+
+import styles from "./chat.module.css";
 
 function Chat() {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -262,7 +267,7 @@ function Chat() {
                         }}
                     >
                         <Toolbar />
-                        <Button variant="contained" color="secondary" onClick={() => openDialog()}>Create Group</Button>
+                        <Button variant="contained" color="secondary" sx={{width: "10rem"}} onClick={() => openDialog()}>Create Group</Button>
                         <Box sx={{ overflow: 'auto' }}>
                             <List>
                                 {allGroups.map((groupName, index) => (
@@ -351,9 +356,19 @@ function Chat() {
                     />
                 </Grid>
                     <Grid size={2}>
-                        <Button variant="contained" color="secondary" onClick={sendMessage}>Send message!</Button>
-                    </Grid></> : <Grid size={6}><h3>Create a new group or select one to get started!</h3></Grid>}
-
+                        <IconButton color="info" size="large" onClick={sendMessage}>
+                            <SendIcon />
+                        </IconButton>
+                    </Grid>
+                </> :
+                    <Grid size={6}>
+                        <DotLottieReact
+                            src="https://lottie.host/e8f3b1a6-3a27-44d3-8b60-a763cd02c964/HTgqvvmM7Y.lottie"
+                            loop
+                            autoplay
+                        />
+                        <h4 className={styles.nunitoSansBody}>Create a new group or select one to get started!</h4>
+                    </Grid>}
             </Grid>
         </>
     );
