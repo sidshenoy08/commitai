@@ -50,6 +50,8 @@ function Chat() {
 
     let socket = useRef(null);
 
+    let messagesEndRef = useRef(null);
+
     const navigate = useNavigate();
     const logout = useCallback(() => {
         localStorage.removeItem('jwtToken');
@@ -102,6 +104,10 @@ function Chat() {
         //     newSocket.disconnect();
         // };
     }, [logout]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [retrievedMessages, activeMessages]);
 
     function openDialog() {
         const request = {
@@ -253,9 +259,15 @@ function Chat() {
         setErrorDialogOpen(false);
     }
 
+    function scrollToBottom() {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
     return (
-        <>
-            <NavigationBar isLoggedIn={true} />
+        <div className={styles.body}>
+            <NavigationBar isLoggedIn={true} onLogout={logout} />
             <Grid container spacing={2}>
                 <Grid size={4}>
                     <Drawer
@@ -267,7 +279,9 @@ function Chat() {
                         }}
                     >
                         <Toolbar />
-                        <Button variant="contained" color="secondary" sx={{width: "10rem"}} onClick={() => openDialog()}>Create Group</Button>
+                        <Box textAlign={'center'}>
+                            <Button variant="contained" color="secondary" sx={{ width: "10rem", justifyContent: 'center' }} onClick={() => openDialog()}>Create Group</Button>
+                        </Box>
                         <Box sx={{ overflow: 'auto' }}>
                             <List>
                                 {allGroups.map((groupName, index) => (
@@ -326,39 +340,63 @@ function Chat() {
                     </DialogActions>
                 </Dialog>
                 <AlertDialog isOpen={errorDialogOpen} closeDialog={closeErrorDialog} title={"Group could not be created!"} content={"Group name cannot be blank and you MUST add at least one member!"} />
-                {openChat ? <><Grid size={6}>
-                    {retrievedMessages.map((message, index) => (
-                        <MessageBox
-                            position={message.sentBy === currentUser ? 'right' : 'left'}
-                            type='text'
-                            text={message.text}
-                            replyButton={true}
-                            title={message.sentBy}
-                            key={index}
-                            date={message.sentAt}
-                        />
-                    ))}
-                    {activeMessages.map((message, index) => (
-                        <MessageBox
-                            position={message.sentBy === currentUser ? 'right' : 'left'}
-                            type='text'
-                            text={message.text}
-                            replyButton={true}
-                            title={message.sentBy}
-                            key={index}
-                            date={message.sentAt}
-                        />
-                    ))}
-                    <Input
-                        placeholder="Start chatting..."
-                        multiline={true}
-                        onChange={handleCurrentMessageChange}
-                    />
-                </Grid>
-                    <Grid size={2}>
-                        <IconButton color="info" size="large" onClick={sendMessage}>
-                            <SendIcon />
-                        </IconButton>
+                {openChat ? <>
+                    <Grid size={6}>
+                        <Box sx={{
+                            height: '80vh',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            padding: '1rem',
+                            border: '1px solid #ccc',
+                            borderRadius: '8px',
+                            backgroundColor: '#2C3E50',
+                            marginTop: '2rem'
+                        }}>
+                            <Box sx={{
+                                overflowY: 'auto',
+                                flexGrow: 1,
+                                marginBottom: '1rem'
+                            }}>
+                                {retrievedMessages.map((message, index) => (
+                                    <MessageBox
+                                        position={message.sentBy === currentUser ? 'right' : 'left'}
+                                        type='text'
+                                        text={message.text}
+                                        replyButton={false}
+                                        title={message.sentBy}
+                                        key={index}
+                                        date={message.sentAt}
+                                    />
+                                ))}
+                                {activeMessages.map((message, index) => (
+                                    <MessageBox
+                                        position={message.sentBy === currentUser ? 'right' : 'left'}
+                                        type='text'
+                                        text={message.text}
+                                        replyButton={false}
+                                        title={message.sentBy}
+                                        key={index}
+                                        date={message.sentAt}
+                                    />
+                                ))}
+                                <div ref={messagesEndRef} />
+                            </Box>
+                            <Box sx={{
+                                display: 'flex',
+                                gap: '0.5rem',
+                                alignItems: 'center'
+                            }}>
+                                <Input
+                                    placeholder="Start chatting..."
+                                    multiline={true}
+                                    onChange={handleCurrentMessageChange}
+                                />
+                                <IconButton color="info" size="large" onClick={sendMessage}>
+                                    <SendIcon />
+                                </IconButton>
+                            </Box>
+                        </Box>
                     </Grid>
                 </> :
                     <Grid size={6}>
@@ -370,7 +408,7 @@ function Chat() {
                         <h4 className={styles.nunitoSansBody}>Create a new group or select one to get started!</h4>
                     </Grid>}
             </Grid>
-        </>
+        </div>
     );
 }
 

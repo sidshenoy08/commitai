@@ -127,6 +127,9 @@ app.post("/upload", upload.array('images'), async (request, response) => {
         response.status(401).json({ message: 'User token is not valid' });
     } else {
         try {
+            if (!authTokenArray[1] || authTokenArray[1] === 'null') {
+                return response.status(401).json({ message: 'User token has expired or is not valid!' });
+            }
             jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
                 if (error) {
                     throw error;
@@ -151,7 +154,6 @@ app.post("/upload", upload.array('images'), async (request, response) => {
                     }
                 }
             });
-
         } catch (error) {
             console.log(error);
             response.status(401).json({ message: 'User token has expired or is not valid!' });
@@ -165,6 +167,9 @@ app.post("/fetch-posts", async (request, response) => {
         response.status(401).json({ message: 'User token is not valid' });
     } else {
         try {
+            if (!authTokenArray[1] || authTokenArray[1] === 'null') {
+                return response.status(401).json({ message: 'User token has expired or is not valid!' });
+            }
             jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
                 if (error) {
                     throw error;
@@ -190,6 +195,9 @@ app.post("/delete-post", async (request, response) => {
         response.status(401).json({ message: 'User token is not valid' });
     } else {
         try {
+            if (!authTokenArray[1] || authTokenArray[1] === 'null') {
+                return response.status(401).json({ message: 'User token has expired or is not valid!' });
+            }
             jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
                 if (error) {
                     throw error;
@@ -203,7 +211,6 @@ app.post("/delete-post", async (request, response) => {
                                 console.log(error);
                                 response.status(500).json({ message: 'Files could not be deleted from internal storage' });
                             }
-                            
                         });
                         response.status(200).json({ message: 'Post deleted successfully' });
                     } else {
@@ -224,6 +231,9 @@ app.post("/fetch-users", async (request, response) => {
         response.status(401).json({ message: 'User token is not valid' });
     } else {
         try {
+            if (!authTokenArray[1] || authTokenArray[1] === 'null') {
+                return response.status(401).json({ message: 'User token has expired or is not valid!' });
+            }
             jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
                 if (error) {
                     throw error;
@@ -253,6 +263,9 @@ app.post("/create-group", async (request, response) => {
         response.status(401).json({ message: 'User token is not valid' });
     } else {
         try {
+            if (!authTokenArray[1] || authTokenArray[1] === 'null') {
+                return response.status(401).json({ message: 'User token has expired or is not valid!' });
+            }
             jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
                 if (error) {
                     throw error;
@@ -282,6 +295,9 @@ app.post("/fetch-groups", async (request, response) => {
         response.status(401).json({ message: 'User token is not valid' });
     } else {
         try {
+            if (!authTokenArray[1] || authTokenArray[1] === 'null') {
+                return response.status(401).json({ message: 'User token has expired or is not valid!' });
+            }
             jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
                 if (error) {
                     throw error;
@@ -311,6 +327,9 @@ app.post("/fetch-messages", async (request, response) => {
         response.status(401).json({ message: 'User token is not valid' });
     } else {
         try {
+            if (!authTokenArray[1] || authTokenArray[1] === 'null') {
+                return response.status(401).json({ message: 'User token has expired or is not valid!' });
+            }
             jwt.verify(authTokenArray[1], process.env.JWT_SECRET, options, async (error, decodedToken) => {
                 if (error) {
                     throw error;
